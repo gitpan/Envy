@@ -3,11 +3,8 @@
 wrapper_usage() {
   echo 'usage: wrapper [-v] [-e envy1 envy2 ...] -s <shell cmd>'
   echo
-  echo  "  By default, wrapper clears all environment variables to"
-  echo  "  simulate the precise execution of cron jobs.  If you wish"
-  echo  "  to disable this behavior, use:"
-  echo
-  echo  "    wrapper --preserve_environment ..."
+  echo  "  wrapper is superseded by launche:"
+  echo  "    please use launche instead!"
   exit
 }
 

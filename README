@@ -59,21 +59,18 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1999-10-14 RELEASE 2.46
+
+- Improved installation instructions.
+
+- Removed LD_LIBRARY_PATH from the default configuration.
+
+- Deprecated wrapper.
+
+
 ** 1999-09-03 RELEASE 2.45
 
 - 'launche': a replacement for wrapper.
-
-
-** 1999-08-30 RELEASE 2.44
-
-- Emergency fix for wrapper.
-
-
-** 1999-08-27 RELEASE 2.43
-
-- Trace activity mode (--trace) to show exactly what is happening.
-
-- Avoid storing warnings which will not be output.
 
 
 see ./INSTALL for hints on installation

@@ -4,22 +4,20 @@ Envy - A comprehensive multi-dimensional environment manager
 
 =head1 SYNOPSIS
 
-Installation takes a bit more work beyond simply typing 'make'.  Big
-returns sometimes involve negotiating big obstacles.  Sorry!
+Unfortunately, installation takes a bit more work beyond simply typing
+'make'.  Big returns can involve negotiating big obstacles.
 
-=head1 FIRST TIME USERS
+=head1 TRIAL
 
-To install envy, you need to determine the type of your login shell.
-In the Unix world, there are mainly two types of shells.  You can find
+To try envy, you need to determine the type of your login shell.  In
+the Unix world, there are mainly two types of shells.  You can find
 out which one you have with:
 
   echo $SHELL
 
-The following cover installation for both types of shells:
+The following covers installation for most shells:
 
 =over 4
-
-=head2 INSTALLING
 
 =item * SH, KSH, BASH, ZSH, Etc.
 
@@ -31,12 +29,13 @@ The following cover installation for both types of shells:
 
 =back
 
-Now type 'envy help'.  You should see a menu of help options.
+Now type 'envy help' and take a look around the menus.
 
-Full installation is not exactly straightforward.  To integrate envy
-into your facilities, see the examples in etc/login.  You should be
-able to cut & paste to get things going.  I hope to have better
-documentation in the future!
+Full installation is not exactly straightforward because to achieve
+the greatest benefit, you'll need to let envy manage your system-wide
+login scripts.
+
+=head1 FULL INSTALLATION
 
 =head2 WHY AM I GOING THROUGH ALL THIS HELL?
 
@@ -49,15 +48,15 @@ problems!
 
 Envy allows the centralization of configuration files.  When new
 versions of software come out, it is easy to globally publish new
-configuration files in preparation for gradual, controlled migration.
-Instead of being locked into backward compatibility, you can gently
-nudge users into change.
+configuration files for a gradual, controlled migration.  Instead of
+being locked into backward compatibility, you can gently nudge users
+towards change.
 
 =item * CHOICE
 
 Each user can customize their environment exactly to the degree they
-want instead of being forced into a global environment or splintering
-into an entirely custom (home directory based :-) setup.
+prefer instead of being forced into a global environment or
+splintering into an entirely custom (home directory based :-) setup.
 
 =item * DEPENDENCIES
 
@@ -65,23 +64,65 @@ Envy makes dependencies between packages explicit and visible.
 
 =item * STARTING APPLICATIONS
 
-The 'launche' script makes it easy to isolate application
-configuration while logging usage and environment dependencies.
+The 'launche' script makes it easy to isolate application from their
+configuration and log usage.
 
 =item * CRON JOBS
 
-Envy makes it easy to set up cron jobs.  Cron jobs no longer fail
-unexpectedly due to missing environment variables since you can test
-them with 'launche'.
+Cron jobs will no longer fail unexpectedly due to missing or mistaken
+environment variables.  The 'launche' script mimics the precise
+execution environment for crontab so test runs are a breeze.
 
 =back
 
-=head2 ENVY SETUP
+=head2 CONFIGURATION
 
-Hopefully, you will find envy very easy to set up for your site.
-Before you 'make install', be sure check ./Conf.pm.
+Before you 'make install', be sure to customize ./Conf.pm.
 
-=head1 EXTENSION API
+=over 4
+
+=item * $prefix
+
+This will default to the same place where perl is installed.
+
+=item * %env0
+
+These variables are hardcoded into various scripts.  You should keep
+the minimum environment necessary to run envy.
+
+=item * @path
+
+On startup, envy will search these paths to find the $startup envy.
+
+=item * $startup
+
+You'll need to write a startup .env file to set up the initial login
+environment.  At a minimum, you'll need to set ENVY_PATH.  You may
+also like to require a few other envies by default.
+
+=back
+
+=head2 SCRIPTS
+
+To determine how to modify your global startup scripts (profile,
+login) see the examples in etc/login.  You should be able to cut &
+paste to get things going.  The minimum you'll need is the following
+in profile:
+
+  eval `/full/path/to/envy.pl load $startup`
+
+or in login:
+
+  $ENVY -csh load $startup > /tmp/mod.$$
+  source /tmp/mod.$$
+  if ($?debug) cat /tmp/mod.$$
+  /bin/rm /tmp/mod.$$
+
+where $startup is replaced with the appropriate envy for your site.
+You'll also need the envy function/alias as mentioned in the TRIAL
+section (above).
+
+=head1 FUTURE DIRECTION
 
 Envy is written entirely in perl and is designed to be used as a
 library as well as a command-line tool.  One possible project is a

@@ -1,3 +1,15 @@
+** 1999-08-30 RELEASE 2.44
+
+- Emergency fix for wrapper.
+
+
+** 1999-08-27 RELEASE 2.43
+
+- Trace activity mode (--trace) to show exactly what is happening.
+
+- Avoid storing warnings which will not be output.
+
+
 ** 1999-08-04 RELEASE 2.42
 
 - Clearly distinguish errors from warnings.
