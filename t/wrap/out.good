@@ -1,0 +1,14 @@
+EDITOR=vi
+ENVY_DIMENSION=
+ENVY_STATE=sybase,1
+ENVY_VERSION=3
+ETOP=./t
+LD_LIBRARY_PATH=/usr/sybase/lib:/usr/lib
+MANPATH=/usr/man
+MODULE_DIMENSION2=
+MODULE_STATE2=sybase,1
+MODULE_VERSION=2.01
+SYBASE=/usr/sybase
+SYBASE_CINC=/usr/sybase/include
+SYBASE_CLIB=/usr/sybase/lib
+_=./t/catenv.sh

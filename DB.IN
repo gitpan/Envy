@@ -1,0 +1,418 @@
+#-*-perl-*-
+
+package Envy::DB;
+use strict;
+use integer;
+use Carp;
+use Symbol;
+use IO::File;
+use vars qw($VERSION $EVERSION);
+
+$VERSION = '2.07';
+
+sub PATH() { 'ENVY_PATH' }
+sub STATE() { 'ENVY_STATE' }
+sub DIMENSION() { 'ENVY_DIMENSION' }
+
+$EVERSION = 3;
+sub EVERSION() { 'ENVY_VERSION' }
+
+sub new {
+    croak "Envy::DB->new([env])" if @_ != 2;
+    my ($class, $env) = @_;
+    my $o = bless { loading=>{} }, $class;
+    $o->reset($env) if $env;
+    $o;
+}
+
+sub debug {
+    my ($o, $yes) = @_;
+    $o->{'debug'} = $yes if defined $yes;
+    $o->{'debug'};
+}
+
+sub reset {
+    my ($o, $env) = @_;
+    $o->{delta} = {};
+    my %env = %$env;
+    $o->{env} = \%env;
+    for (&PATH, &STATE, &DIMENSION) { $o->{env}{$_} ||= ''; }
+    $o->{'warn'} ||= [];
+}
+
+sub _warn {
+    my $o = shift;
+    my $w = join('', @_);
+    $w .= "\n" if $w !~ m/\n$/;
+    push(@{$o->{'warn'}}, $w);
+}
+
+sub version {
+    my ($o) = @_;
+    $o->{env}{&EVERSION} || $o->{env}{'MODULE_VERSION'} || $EVERSION;
+}
+
+sub strip_base {
+    my ($base) = @_;
+    $base =~ s,/mo/.+?\.(mo|env)$,,;
+    $base =~ s,/etc/envy/.+?\.(mo|env)$,,;
+    $base;
+}
+
+sub _subst {
+    my ($o, $str, $base, $context) = @_;
+    my $subst = sub {
+	my $var = shift;
+	$var =~ tr [{}] []d;
+	if ($var eq 'MODULE_BASE' or $var eq 'modulebase' or
+	    $var eq 'ENVY_LINKBASE') {
+	    return strip_base($base);
+	} elsif ($var eq 'MODULE_REALBASE' or $var eq 'ENVY_BASE') {
+	    my $rbase = $base;
+	    while (-l $rbase) {
+		$rbase = readlink($rbase) or die "readlink $rbase";
+	    }
+	    return strip_base($rbase);
+	}
+	do { $o->_warn("Variable '$var' not set".$context); return '' } if
+	    !defined $o->{env}{$var};
+	$o->{env}{$var};
+    };
+    while ($str =~ s/
+	   \$ (
+	       (:? \{[\w\d_-]+\} ) |
+	       (:?   [\w\d_-]+   )
+	       )
+	   /&$subst($1)/exg) {};
+    $str;
+}
+
+sub add_path {
+    my ($o, $p) = @_;
+    return if $o->{path}{$p};
+    $o->{path}{$p} = 1;
+    $o->_warn("Reading $p...") if $o->debug;
+    my $dh = gensym;
+    opendir($dh, $p) or do {
+#	$o->_warn("Could not read directory '$p' (warning).");
+	return;
+    };
+    for my $m (readdir($dh)) {
+	next if ($m =~ /^\.+$/ or -d "$p/$m");
+	if ($m =~ /[,\s]/)
+	{ $o->_warn("Envy found containing commas '$p/$m' (ignored)."); next; }
+	if ($m !~ /\.(mo|env)$/) {
+	    if ($p =~ m,etc/envy, and $m !~ m/\.env$/) {
+		$o->_warn("Envy with bad suffix '$p/$m'.");
+	    }
+	    next;
+	}
+
+	my $file = $m;
+	$m =~ s/\.(mo|env)$//;
+	if (defined $o->{cache}{$m}) {
+#	    $o->_warn("Using envy '$m' found at $o->{cache}{$m}, not from $p.");
+	    next;  #prepend overrides
+	}
+	$o->_warn("\t$m=$p/$file") if $o->debug;
+	$o->{cache}{$m} = "$p/$file";
+    }
+    closedir($dh);
+}
+
+sub cache_path {
+    my ($o, $mo) = @_;
+    return if $o->{cache};
+    confess "cache_state before cache_path" if exists $o->{state};
+    $o->{cache} = {};
+    if ($mo and $mo =~ m-^/- and -d $mo) {
+	$o->{cache}{$mo} = "$mo/.envy";  # ~username
+    }
+
+    my $path;
+    if ($o->version == 2.01) { $path = $o->{env}{'MODULE_PATH'} || ''; }
+    else { $path = $o->{env}{&PATH} || ''; }
+
+    my @default;
+    if ($ENV{REGRESSION_PATH}) {
+	@default = split(m/\s+/, $ENV{REGRESSION_PATH});
+    } else {
+	@default = #SEARCH#;
+    }
+
+    my @to_add = (split(/:+/, $path), @default);
+    for my $p (@to_add) {
+	$o->add_path($p);
+    }
+}
+
+=head1 ENVY STATE
+
+STARTUP - set ETOP on login
+1 - top level
+<envy> - depends on given envy
+2 - required by multiple envys
+
+=cut
+
+sub cache_state {
+    my ($o) = @_;
+    return if exists $o->{state};
+    my %state;
+    my %dimen;
+
+    if ($o->version == 2.01) {
+	for my $m (split(/:+/, $o->{env}{'MODULE_STATE2'})) {
+	    my ($k,$v) = split(/,/, $m);
+	    $state{$k}=$v;
+	    if (!$o->{cache}{$k} and $k =~ m-^/- and -d $k) {
+		$o->{cache}{$k}="$k/.envy";
+	    }
+	}
+	%dimen = map { split(/,/) } split(/:+/, $o->{env}{'MODULE_DIMENSION2'});
+    } else {
+	for my $m (split(/:+/, $o->{env}{&STATE})) {
+	    my ($k,$v) = split(/,/, $m);
+	    $state{$k}=$v;
+	    if (!$o->{cache}{$k} and $k =~ m-^/- and -d $k) {
+		$o->{cache}{$k}="$k/.envy";
+	    }
+	}
+	%dimen = map { split(/,/) } split(/:+/, $o->{env}{&DIMENSION});
+    }
+    
+    $o->{dimen} = \%dimen;
+    $o->{state} = \%state;
+}
+
+sub write_state {
+    my ($o) = @_;
+    confess "write_state of nothing" if (!$o->{state} or !$o->{dimen});
+
+    # 2.01
+    $o->{env}{'MODULE_VERSION'} = 2.01;
+    $o->{env}{'MODULE_STATE2'} =
+	join(':',map {"$_,$o->{state}{$_}"} sort keys %{$o->{state}});
+    $o->{env}{'MODULE_DIMENSION2'} =
+	join(':',map {"$_,$o->{dimen}{$_}"} sort keys %{$o->{dimen}});
+    for (qw(MODULE_VERSION MODULE_STATE2 MODULE_DIMENSION2)) {
+	$o->{delta}{$_} = 1;
+    }
+
+    # current version
+    $o->{env}{&EVERSION} = $EVERSION;
+    $o->{env}{&STATE} =
+	join(':',map {"$_,$o->{state}{$_}"} sort keys %{$o->{state}});
+    $o->{env}{&DIMENSION} =
+	join(':',map {"$_,$o->{dimen}{$_}"} sort keys %{$o->{dimen}});
+    for (&STATE, &DIMENSION, &EVERSION) { $o->{delta}{$_} = 1; }
+
+    # cleanup
+    delete $o->{state};
+    delete $o->{dimen};
+}
+
+sub write_path {
+    my ($o) = @_;
+    for (@{$o->{default}}) { delete $o->{path}{$_}; }
+    my $new = join(':', sort keys %{$o->{path}});
+    if ($o->{env}{&PATH} ne $new) {
+	# 2.01
+	$o->{env}{'MODULE_PATH'} = $new;
+	$o->{delta}{'MODULE_PATH'} = 1;
+	
+	# current
+	$o->{env}{&PATH} = $new;
+	$o->{delta}{&PATH}=1;
+    }
+}
+
+sub can_edit {
+    my ($o, $k, $ctx) = @_;
+    do { $o->_warn("Variable '$k' is not alpha-numeric".$ctx); return 0} if
+	$k !~ /[\w\d_-]+/;
+    do { $o->_warn("Naughty naughty, $k is private".$ctx); return 0} if
+	($k eq &STATE or $k eq &DIMENSION);
+    $o->{delta}{$k}=1;
+    1;
+}
+
+sub is_unloaded {
+    my ($o, $m) = @_;
+    $o->cache_state();
+    ! $o->{state}{$m};
+}
+
+sub do_envy {
+    my ($o, $mo, $reverse) = @_;
+    $o->cache_path($mo);
+    $o->cache_state();
+    my $prior = exists $o->{env}{ETOP}? '1':'STARTUP';
+    _exe($o, $reverse, $mo,
+	 " while ".($reverse?"un":"")."loading envy '$mo'.\n", $prior);
+    $o->write_state();
+    $o->write_path();
+}
+
+sub _exe {
+    my ($o, $reverse, $mo, $context, $prior) = @_;
+
+    do { $o->_warn("Envy '$mo' is already unloaded".$context); return; } if
+	$reverse && $o->is_unloaded($mo);
+    do { $o->_warn("Can't find envy '$mo'".$context); return; } if
+	!defined $o->{cache}{$mo};
+    do { $o->_warn("Recursive reloading detected in '$mo'".$context); return;} if defined $o->{loading}{$mo};
+
+    my $base = (my $path = $o->{cache}{$mo});
+    $o->{loading}{$mo}=1;
+
+    my @file;
+    {
+	my $fh = new IO::File;
+	$fh->open($path) or
+	    do { $o->_warn("Envy '$mo' ($path) is not readable."); return };
+	@file = $reverse? reverse <$fh> : <$fh>;
+    }
+    my $first=1;
+    for (my $line=1; $line <= @file; $line++) {
+	my $l = $file[$line-1];
+	$l =~ s/\s*\#.*$//;
+	next if $l =~ /^\s*$/;
+	my $ctx = " at envy '$mo' line $line\n\t".$context;
+
+	if ($l =~ /^require\s+(\S+)/) {
+	    $first=0;
+	    my $str = $o->_subst($1, $base, $ctx);
+	    $o->_warn("Inappropriate whitespace detected".$context)
+		if $str =~ /\s/;
+	    $o->_exe($reverse, $str, $ctx, $mo);
+
+	} elsif ($l =~ /^depreciated$/) {
+	    $o->_warn("Envy '$mo' is depreciated".$context)
+		if !$reverse;
+
+	} elsif ($l =~ /^dimension\s+(\S+)\s*$/) {
+	    my $di = $1;
+	    if ($reverse) {
+		delete $o->{dimen}{$di};
+	    } else {
+		die "Dimensions must be listed first".$context if !$first;
+		if (exists $o->{dimen}{$di} and $o->{dimen}{$di} ne $mo) {
+		    $o->_warn("Swapping $di from '$o->{dimen}{$di}'".$context);
+		    $o->_exe(1,$o->{dimen}{$di}, $ctx, $mo);
+		}
+		$o->{dimen}{$di} = $mo;
+	    }
+
+	} elsif ($l =~ /^([^=+]+)=(.*)$/) {
+	    $first=0;
+	    my ($k,$v) = ($1,$2);
+	    next if !$o->can_edit($k, $ctx);
+	    do {$o->_warn("Variable '$k' must be edited with +=".$ctx);next} if
+		($k eq 'PATH' or $k eq 'MANPATH' or $k eq &PATH);
+
+	    if ($reverse) {
+		delete $o->{env}{$k};
+	    } else {
+		do {$o->_warn("Variable '$k' redefined".$ctx) } if
+		    (exists $o->{env}{$k} and !exists $o->{state}{$mo});
+		$o->{env}{$k} = $o->_subst($v, $base, $ctx);
+	    }
+
+	} elsif ($l =~ /^([^=+]+)\+\=(.*)$/) {
+	    $first=0;
+	    my ($k,$v) = ($1,$2);
+	    next if !$o->can_edit($k, $ctx);
+	    my $vsubst = $o->_subst($v, $base, $ctx);
+	    $o->_warn("Inappropriate whitespace detected".$context)
+		if $vsubst =~ /\s/;
+	    my @delta = split(/:+/, $vsubst);
+	    my @now = defined $o->{env}{$k}? split(/:+/, $o->{env}{$k}) : ();
+	    if ($k eq 'PATH') {
+		my @nodot;
+		for (@now) { push(@nodot, $_) if $_ ne '.'; }
+		@now = @nodot;
+	    }
+	    if ($reverse) {
+		my @old = @now;
+		@now=();
+		my %nuke;
+		for (@delta) { $nuke{$_}=1 }
+		for my $e (@old) {
+		    if (exists $nuke{$e}) {
+#			warn "$k-=$e";
+			delete $o->{path}{$e} if ($k eq &PATH or
+						  $k eq 'MODULE_PATH');
+			delete $nuke{$e};
+			next;
+		    }
+		    push(@now, $e);
+		}
+	    } else {
+		my %now;
+		for (@now) { $now{$_}=1 }
+		for my $z (@delta) {
+		    if (exists $now{$z}) {
+			$o->_warn("Component '$z' added to '$k' again".$ctx)
+			    if !exists $o->{state}{$mo};
+			next;
+		    }
+		    $o->add_path($z) if ($k eq &PATH or
+					 $k eq 'MODULE_PATH');
+		    unshift(@now, $z);
+#			warn "$k+=$z";
+		}
+	    }
+	    unshift(@now, '.') if $k eq 'PATH';
+	    $o->{env}{$k} = join(':', @now);
+
+	} else {
+	    $o->_warn("Inexplicable ignored: $l".$ctx);
+	}
+    }
+    if ($reverse) { delete $o->{state}{$mo}; }
+    else {
+	my $cur = $o->{state}{$mo};
+	if ($cur and $cur !~ m/^\d+$/ and $prior ne '1' and $cur ne $prior) {
+	    # dependency conflict - set to phase 2 for unload all
+	    $o->{state}{$mo}='2';
+	    $o->_warn("Envy '$mo' also loaded by '$cur'".$context)
+	} elsif (!$cur) {
+	    $o->{state}{$mo}=$prior;
+	}
+    }
+    delete $o->{loading}{$mo};
+}
+
+sub warnings {
+    my ($o) = @_;
+    @{$o->{'warn'}};
+}
+
+sub to_sync {
+    my ($o) = @_;
+    sort {$a->[0] cmp $b->[0]} map { [$_,$o->{env}{$_}] } keys(%{$o->{delta}});
+}
+
+sub to_unload {
+    my ($o, $phase) = @_;
+    $o->cache_state;
+    my @loaded;
+    for my $mo (keys %{$o->{state}}) {
+	push(@loaded, $mo) if $o->{state}{$mo} eq $phase;
+    }
+    @loaded;
+}
+
+sub status {
+    my ($o) = @_;
+    $o->cache_path();
+    $o->cache_state;
+    my @loaded;
+    for my $mo (keys %{$o->{state}}) {
+	push(@loaded, $mo) if $o->{state}{$mo};
+    }
+    ($o->{cache},\@loaded);
+}
+
+1;

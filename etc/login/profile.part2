@@ -1,0 +1,91 @@
+# We just got finished with dot.profile, do all other non-critical
+# initialization.
+
+#-----------------------------------------------------------------------
+# Generic   
+#-----------------------------------------------------------------------
+if tty >/dev/null 2>&1 ; then tty=1; else tty=0; fi
+umask 0
+#-----------------------------------------------------------------------
+# xemacs
+#-----------------------------------------------------------------------
+if [ -s $HOME/.tilde ]; then :; else mkdir -m 700 $HOME/.tilde; fi
+/bin/rm -f $HOME/.tilde/*
+#-----------------------------------------------------------------------
+# ObjectStore
+#-----------------------------------------------------------------------
+if [ -s /tmp/ostore ]; then :; else mkdir -m 777 /tmp/ostore; fi
+#-----------------------------------------------------------------------
+# Fix TTY
+#-----------------------------------------------------------------------
+if [ $tty -eq 1 ]; then
+	#---------------------------------------------------------------
+	# Fix TTY
+	#---------------------------------------------------------------
+	stty sane
+	stty erase '^h' kill '^u' susp '^z'
+fi
+
+#---------------------------------------------------------------
+# Shell prompt
+#---------------------------------------------------------------
+case `/bin/basename $SHELL` in
+	ksh) PS1=`hostname`:'$PWD$ '
+             PS2='>'
+             ENV=$HOME/.shrc
+             FPATH=
+             CDPATH=
+	     export PS1 PS2 ENV FPATH CDPATH
+	     ;;
+	bash)
+	     PS1='\[]2;\h:\W\][\u@\h] \w% '
+	     INPUTRC=$ETOP/etc/login/bash.inputrc
+	     export INPUTRC
+	     export PS1
+	     ;;
+	zsh) PROMPT='%{]2;%m:%2c%}%U[%n@%m] %2c%#%u ' 
+	     HISTSIZE=300
+	     DIRSTACKSIZE=30
+	     export PROMPT
+	     export HISTSIZE
+	     export DIRSTACKSIZE
+	     ;;
+	sh )
+esac
+
+#-----------------------------------------------------------------------
+# Custom profile
+#-----------------------------------------------------------------------
+module() {
+        envy.pl $* > /tmp/t$$; . /tmp/t$$; /bin/rm -f /tmp/t$$
+	echo "*** Type 'envy' instead of module ***"
+}
+envy() {
+        envy.pl $* > /tmp/t$$; . /tmp/t$$; /bin/rm -f /tmp/t$$
+}
+if [ -f $HOME/.custom/.profile ]; then
+	. $HOME/.custom/.profile
+fi
+if [ -f $HOME/.custom/profile ]; then
+	. $HOME/.custom/profile
+fi
+#-----------------------------------------------------------------------
+# X Windows (if TTY)
+#-----------------------------------------------------------------------
+if [ $tty -eq 1 ] ; then
+
+  if [ -f $HOME/.custom/win.name ]; then win=`cat $HOME/.custom/win.name`; fi
+  if [ x$win = x ]; then win=fvwm95; fi
+  if [ '!' -r $ETOP/etc/desktop/$win ]; then
+    echo "Can't read $ETOP/etc/desktop/$win";
+    win=fvwm95
+  fi
+  echo $win > $HOME/.custom/win.name
+
+  . $ETOP/etc/desktop/$win
+fi
+
+# CDE crap
+if [ x$DTUSERSESSION != x ]; then
+  envy.pl openwin > /tmp/t$$; . /tmp/t$$; /bin/rm -f /tmp/t$$
+fi

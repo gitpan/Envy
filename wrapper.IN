@@ -1,0 +1,47 @@
+#!/bin/ksh
+USAGE='usage: [-e envy1 envy2 ...] [-s <shell cmd> ...]'
+#INITIAL_ENV#
+
+typeset -i i
+typeset -i j
+if [[ $# = 0 ]]; then
+    echo $USAGE
+    break
+fi
+  
+ENVY=`dirname $0`/envy.pl
+test -x $ENVY || echo Envy not found at $ENVY: PANIC
+
+while [[ $1 = -* ]];
+do
+case $1 in
+
+-s) while [[ $2 != -* && $# > 1 ]];
+    do 
+	commands[$i]=${commands[$i]}" "$2
+	shift
+    done
+    i=$i+1;;
+
+-m|-e) while [[ $2 != -* && $# > 1 ]];
+    do 
+	$ENVY load $2 > /tmp/t$$; . /tmp/t$$; /bin/rm -f /tmp/t$$
+	shift
+    done;;
+
+*)  echo "ILLEGAL OPTION -"$1 
+    echo $USAGE
+    break
+esac
+
+if [[ $# > 0 ]];  then
+    shift
+fi
+done
+j=$i
+i=0
+while [[ $i < $j ]];
+do
+    ${commands[$i]} 
+    i=$i+1
+done

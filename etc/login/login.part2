@@ -1,0 +1,26 @@
+# We just got finished with dot.login, do all other non-critical
+# initialization.
+
+set tty = 0; tty -s && set tty = 1
+umask 0
+
+# xemacs
+test -s $HOME/.tilde || mkdir -m 700 $HOME/.tilde
+/bin/rm -f $HOME/.tilde/* >&! /dev/null  #redirect since glob can fail
+
+# ObjectStore
+test -s /tmp/ostore || mkdir -m 777 /tmp/ostore
+
+if ($tty) then
+  stty sane
+  stty erase '^h' kill '^u' susp '^z'
+endif
+
+alias envy 'envy.pl -csh \!* > /tmp/tmp.$$; source /tmp/tmp.$$; /bin/rm /tmp/tmp.$$'
+alias module 'envy.pl -csh \!* > /tmp/tmp.$$; source /tmp/tmp.$$; /bin/rm /tmp/tmp.$$'
+
+test -f $HOME/.custom/login && source $HOME/.custom/login
+
+# We need to do this again because csh reads dot.cshrc before dot.login.
+# The order should be reversed, therefore:
+source $HOME/.cshrc
