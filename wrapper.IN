@@ -1,5 +1,16 @@
 #!/bin/ksh
 USAGE='usage: [-e envy1 envy2 ...] [-s <shell cmd> ...]'
+
+if [ x$ENVY_VERSION != x ]; then
+  echo
+  echo '*** ERROR: Envy is already running!'
+  echo
+  echo 'To test, please use this idiom:'
+  echo "  'env -i $0 ...'"
+  echo
+  exit
+fi
+
 #INITIAL_ENV#
 
 typeset -i i

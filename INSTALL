@@ -1,0 +1,35 @@
+Envy is a comprehensive, multi-dimensional environment manager.
+
+Installation is going to take some work beyond simply typing 'make'.
+If you are a first time user follow these steps (depending on your
+login shell):
+
+
+SH:
+   PERL5PREFIX=$HOME/test; export PERL5PREFIX
+   perl Makefile.PL
+   make test; make install
+
+   env -i $PERL5PREFIX/bin/wrapper -s echo            # test it
+
+   mv $HOME/.profile $HOME/.profile.bak
+   ln -s $PERL5PREFIX/etc/dot.profile $HOME/.profile
+
+
+CSH:
+   setenv PERL5PREFIX=$HOME/test
+   perl Makefile.PL
+   make test; make install
+
+   env -i $PERL5PREFIX/bin/wrapper -s echo            # test it
+
+   mv $HOME/.login $HOME/.login.bak
+   ln -s $PERL5PREFIX/etc/dot.login $HOME/.login
+
+
+Logout and login.  Type 'envy list' or 'envy help'.
+
+Explore.  Get a feel for it, and get others to try it.
+
+Thanks and good luck!
+

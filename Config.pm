@@ -36,9 +36,9 @@ $default_path = "qw(".join(' ', @path).")";
 
 ### The default envy to load upon login
 if (exists $ENV{ENVY_DIMENSION}) {
-    my $first = grep /^First\,/, split /:+/, $ENV{ENVY_DIMENSION};
-    $default_startup = (split /,/, $first)[1]
-	if $first;
+    my @first = grep /^First\,/, split /:+/, $ENV{ENVY_DIMENSION};
+    $default_startup = (split /,/, $first[0])[1]
+	if @first;
 }
 
 $default_startup ||= 'test';

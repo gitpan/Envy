@@ -2,28 +2,8 @@
 
 use ExtUtils::MakeMaker;
 
-warn "-" x 75 . "\n";
 warn q[
-Envy is a comprehensive, multi-dimensional environment manager.
-Installation is going to take some work beyond simply typing 'make'.
-If you are a first time user:
-
-   PERL5PREFIX=$HOME/test; export PERL5PREFIX         #sh
-   setenv PERL5PREFIX=$HOME/test                      #csh
-   perl Makefile.PL
-   make test; make install
-
-   env -i $PERL5PREFIX/bin/wrapper -s echo            # test it
-
-   mv $HOME/.profile $HOME/.profile.bak               #sh
-   ln -s $PERL5PREFIX/etc/dot.profile $HOME/.profile  #sh
-   mv $HOME/.login $HOME/.login.bak                   #csh
-   ln -s $PERL5PREFIX/etc/dot.login $HOME/.login      #csh
-
-   Logout and login.  Type 'envy list' or 'envy help'.
-
-Explore.  Get a feel for it, and get others to try it.
-Thanks and good luck!
+       Please read ./INSTALL unless you know what you're doing!
 
 ];
 
@@ -49,7 +29,7 @@ my @test = ('test.env' => '$(INST_ETC)/envy/test.env')
 WriteMakefile(@prefix,
 	      NAME => 'Envy',
 	      PREREQ_PM => { Test => 1 },
-	      EXE_FILES => [qw(envy.pl wrapper)],
+	      EXE_FILES => [qw(envy.pl wrapper envied)],
 	      MAN1PODS => {}, # MANPATH might be unset!
 	      MAN3PODS => {},
 	      PL_FILES => {'set_defaults.PL' => join(' ', values %$subst_files) },

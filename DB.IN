@@ -11,7 +11,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $LOGIN $Reloading $Context $Loop $Path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(@DefaultPath);
-$VERSION = '2.18';
+$VERSION = '2.19';
 
 umask 0;  # Figure out how to run setuid 'envy' XXX
 
@@ -643,6 +643,12 @@ sub status { #PUBLIC
     $o->cache_state if !exists $o->{loaded};
     my @loaded = keys %{$o->{loaded}};
     ($o->get_fullpath(),\@loaded);
+}
+
+sub quick_status { #PUBLIC
+    my ($o) = @_;
+    $o->cache_state if !exists $o->{loaded};
+    $o->{loaded}, $o->{dimen};
 }
 
 1;

@@ -107,9 +107,9 @@ sub GO() {
 	my %loaded;
 	for (@$ld) { $loaded{$_}=1 }
 	my @mo;
-    foreach (sort keys %$mo){
-      push(@mo,$_) if($mo->{$_} !~ /\.priv/); # hide .priv directory files
-    }
+	foreach (sort keys %$mo){
+	    push(@mo,$_) if($mo->{$_} !~ /\.priv/); # hide .priv directory files
+	}
 	if (@mo > 1) {
 	    my @exact = sort grep(/^$cmd$/i, keys %$mo);
 	    @mo = @exact if @exact == 1;

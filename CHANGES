@@ -1,3 +1,35 @@
+** 1998-09-01 RELEASE 2.17
+
+- Append and assignment were ambiguous and assignment took precedence.
+Append is now assumed.  Added tests.
+
+- Envies found in .priv directories are hidden from the listing.
+
+- Fixed 5.004-ish warnings.
+
+
+** 1998-08-31 RELEASE 2.16
+
+- A fairly large amount of work (mostly in the form of deep pondering)
+has gone into this release.  Please consider it BETA and test
+it carefully!
+
+- Replaced bizarre installation instructions with much simpler.
+
+- Improved start-up time.
+
+- More documentation: envy help and FAQ.pod
+
+- Changes to the ENVY_PATH are now reflected (immediately) when
+loading multiple envys during a single invokation.
+
+- Added support for *.site configuration files.  This allows per-site
+customization of default settings (like xemacs).
+
+- Switched default umask to 002.  Should be part of site
+configuration?
+
+
 ** 1998-03-05 RELEASE 2.15
 
 - Fixed handling of $HOME/.envy.

@@ -2,12 +2,14 @@ CHANGES
 Config.pm
 DB.IN
 FAQ.pod
+INSTALL
 Load.pm
 MANIFEST
 MANIFEST.SKIP
 Makefile.PL
 README
 TODO
+envied
 envy.pl
 etc/login/bash.inputrc
 etc/login/dot.cshrc
@@ -30,6 +32,7 @@ login.IN
 profile.IN
 set_defaults.PL
 subst.pm
+t/config.t
 t/db.t
 t/load.t
 test.IN

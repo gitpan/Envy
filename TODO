@@ -1,5 +1,10 @@
 ** TODO
 
+pipe through $ENV{PAGER}
+
+Maybe it is possible to read the $ENVY_PATH one component at a time?
+Seems yes..?  Potentially big performance win.
+
 description / summary
 
 real lexical analysis
@@ -7,7 +12,6 @@ real lexical analysis
 short cuts:
   unenvy : envy unload
   envy !3trade : unload
-  envied : show only loaded *.env
 
 regression tests
   dimension swapping
@@ -21,6 +25,10 @@ comparison operations -
 
 in the 'envy list' and such, the marker is always 'x'
   instead, the marker should be dependent on where the file was loaded?
+
+Implement BSD make's "?=" variable assignment operator.  The variable
+is assigned the specified value only if that variable is not already
+defined.
 
 macro-ize?
   unshift(VAR, ' ', COMPONENTS)
@@ -43,11 +51,13 @@ documentation for:
   Envy::DB API
   envy help conf??
 
+---------------------------------------- GRAPHICAL ENVY PROJECT ---------
+
 This afternoon I started prototyping some stuff for a graphical envy
 module picker/cshrc creator. (Not sure whether I want to use the
 dotfile generator or not.) I'm using perl-TK, so can directly use the
 Envy::DB routines.
- 
+
 What I'm finding I need is the tree stuff we talked about
 before. Basically I need to be able to query the DB to find dimensions
 that are NOT loaded. (Dimensions that are loaded could maybe be
@@ -59,20 +69,62 @@ thing you want me to keep in mind as I work on this? I'm thinking
 it'll be a generic query subroutine in the DB.IN and some stuff in
 envy.pl to add a 'envy.pl tree' command.
 
+On Thu, 3 Sep 1998 Tony.Parent@Symbios.COM wrote:
+> me in the DB code. Correct me if I'm wrong, but so far I'm thinking that
+> I'll essetially have to load each module to make sure the vars are set and
+> I get the correct sub module.
+ 
+Gack!  Your right!  What a mess!  :-)
+ 
+> a.env:
+> 
+> # Set the site variable
+> require SITE 
+> require b_$SITE
+> 
+> In order to show the correct b_<site>.env module I'll have to fully load "a"
+> first. 
+ 
+That should be interesting.  Definitely, think about caching the results
+somehow.  Maybe use Storable?
+ 
+> Now on to the tree traversal stuff...
+> 
+> 1) Create another level of abstraction Envy::DB::Node or Envy::DBNode
+ 
+Right.  That's what I was thinking.  Perhaps 'Envy::Node'.  Shorter is
+better.
 
---------------------------------------- DONE
-
-break up help into multiple sections
-
-detect already installed envy and fetch existing config.pm?
-
-avoid IO::* stuff to speed startup time
-
--verbose -silent
-
-var:=value
-
-require Envy $VERSION
-
-error "BLAH is not defined for your site."
+In perl that should boil down to:
+ 
+  { up => [], down => [], dimen => 'compiler', fullpath => '?' }
+ 
+> (Children needs to be an array as one module can require multiple sub
+> modules. Parents needs to be an array because on module can be required by
+> many differant modules.)
+ 
+Right.  You are doing the GUI, so good luck!
+ 
+> This one may entail more rewrite of the rest of the code for consistancy
+> then I want (or need) to do.
+ 
+I don't think so.  I specifically thought about this when I rewrote it
+last week.  Most of the operations envy executes don't need the full tree.  
+Maybe you should put all your code under Envy::BigDB and make the minimum
+changes to Envy::DB.
+ 
+> 2) Store the data in DB:: vars and use functions to access the data. Here
+> the above functions would look like:
+ 
+There is some overlap between the two databases.  But not very much and we
+can deal with that later.  Maybe try this:
+ 
+  package Envy::BigDB;
+  @ISA = 'Envy::DB';
+ 
+  sub nav_dimension { ... }
+  sub process_envy { ... }
+ 
+In essence, provide your own wrappers around all the default methods so
+you can fill in all the extra info.  Does this make sense?
 
