@@ -176,9 +176,9 @@ my $db = Envy::DB->new(\%ENV);
 
 while (@ARGV and $ARGV[0] =~ m/^\-/) {
     my $arg = shift @ARGV;
-    if    ($arg eq '-csh')           { $is_csh=1 }
-    elsif ($arg eq '-un')            { $is_unload=1 }
-    elsif ($arg =~ m/^-q(uiet)?$/)   { $db->warnlevel(0) }
+    if    ($arg eq '-csh')           { $is_csh=1 }   #rename: --csh
+    elsif ($arg eq '-un')            { $is_unload=1 } #deprecate? XXX
+    elsif ($arg =~ m/^-q(uiet)?$/)   { $db->warnlevel(0) } #rename
     elsif ($arg eq '--trace')        { $db->warnlevel(3) }
     elsif ($arg eq '--debug')        { $db->warnlevel(4) }
     elsif ($arg eq '-v')             { $db->warnlevel($db->warnlevel() + 1) }

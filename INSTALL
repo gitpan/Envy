@@ -5,7 +5,7 @@ Envy - A comprehensive multi-dimensional environment manager
 =head1 SYNOPSIS
 
 Installation takes a bit more work beyond simply typing 'make'.  Big
-returns sometimes involve negotiating big risks.  Sorry!
+returns sometimes involve negotiating big obstacles.  Sorry!
 
 =head1 FIRST TIME USERS
 
@@ -24,24 +24,23 @@ The following cover installation for both types of shells:
 =item * SH, KSH, BASH, ZSH, Etc.
 
    envy() { eval `envy.pl $*`; }
-   unenvy() { eval `envy.pl -un $*`; }
 
 =item * CSH, TCSH, Etc.
 
    alias envy 'envy.pl -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
-   alias unenvy 'envy.pl -un -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
 
 =back
 
 Now type 'envy help'.  You should see a menu of help options.
 
 Full installation is not exactly straightforward.  To integrate envy
-into your facilities, consider the example profile.IN & login.IN.  I
-hope to have better documentation in the future!
+into your facilities, see the examples in etc/login.  You should be
+able to cut & paste to get things going.  I hope to have better
+documentation in the future!
 
 =head2 WHY AM I GOING THROUGH ALL THIS HELL?
 
-Because envy could solve some of your tenacious, long standing
+Because envy could solve some of your long standing, tenacious
 problems!
 
 =over 4
@@ -50,32 +49,32 @@ problems!
 
 Envy allows the centralization of configuration files.  When new
 versions of software come out, it is easy to globally publish new
-configuration files in preparation for a gradual and controlled
-migration.  Instead of being locked into backward compatibility, you
-can slowly nudge users into changing.
+configuration files in preparation for gradual, controlled migration.
+Instead of being locked into backward compatibility, you can gently
+nudge users into change.
 
 =item * CHOICE
 
 Each user can customize their environment exactly to the degree they
 want instead of being forced into a global environment or splintering
-into an entirely custom (home directory based) environment.
+into an entirely custom (home directory based :-) setup.
 
 =item * DEPENDENCIES
 
-Envy makes dependencies between packages explicit and understandable.
+Envy makes dependencies between packages explicit and visible.
+
+=item * STARTING APPLICATIONS
+
+The 'launche' script makes it easy to isolate application
+configuration while logging usage and environment dependencies.
 
 =item * CRON JOBS
 
-Envy makes it easy to correctly set up cron jobs.  Cron jobs will no
-longer fail unexpectedly due to missing environment variables.
+Envy makes it easy to set up cron jobs.  Cron jobs no longer fail
+unexpectedly due to missing environment variables since you can test
+them with 'launche'.
 
 =back
-
-=head2 CRONTAB
-
-Use C<$ETOP/bin/wrapper> to initiate cron jobs.  C<wrapper> is a very
-simple script that loads envies given on the command line and then
-executes shell commands.
 
 =head2 ENVY SETUP
 
@@ -99,7 +98,7 @@ For a comparison of unix shells:
 
   http://www.faqs.org/faqs/unix-faq/shell/shell-differences/index.html
 
-And for why you should not do shell programming in csh:
+And for why you should *not* do shell programming in csh:
 
   http://www.faqs.org/faqs/unix-faq/shell/csh-whynot/
 

@@ -2,6 +2,7 @@
 use vars qw($subst_files);
 $subst_files = {
 		'wrapper.IN' => 'wrapper',
+		'launche.IN' => 'launche',
 		'DB.IN' => 'DB.pm',
 		'test.IN' => 'test.env',
 		'profile.IN' => 'etc/login/dot.profile',

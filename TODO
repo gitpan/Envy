@@ -78,7 +78,7 @@ Gack!  You're right!  What a mess!  :-)
  
 ---------------------------------------------- PIE IN THE SKY! ---
 
-store ENVY_STATE, etc, as compressed hex?!
+store ENVY_STATE, etc, compressed?!
 
 envy.pl
   show loaded dimensions in PROMPT?
@@ -86,7 +86,7 @@ envy.pl
   in the 'envy list' the marker is always 'x'
     make the marker dependent on where the file was loaded?
 
-macro-ize?
+macro-ize notation?
   unshift(VAR, ' ', COMPONENTS)
   push(VAR, ' ', COMPONENTS)
 

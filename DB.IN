@@ -80,7 +80,7 @@ sub _internal_warn {
 	$w .= $Context
 	    if $Context && $w !~ m/\n$/s;
     } else {
-	$w = ('  'x$NestLevel).$w;
+	$w = 'D ' . ('  'x$NestLevel).$w;
     }
     $w .= "\n" if $w !~ m/\n$/s;
     if ($level <= $o->{strictness}) {
@@ -284,6 +284,7 @@ sub get_refcnt { #PRIVATE
     my $rc = $o->{loaded}{$e};
     $rc = 1 if $rc eq '0' || $rc !~ m/^\d+$/;
     $rc;
+    # dualvar? XXX
 }
 sub set_refcnt { #PRIVATE
     my ($o,$e,$rc) = @_;

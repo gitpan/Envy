@@ -1,3 +1,12 @@
+** 1999-08-04 RELEASE 2.42
+
+- Clearly distinguish errors from warnings.
+
+- Error reporting wasn't happening: repaired.
+
+- Fixed malformed REx detected by perl 5.5.58.
+
+
 ** 1999-07-21 RELEASE 2.41
 
 - Re-search ENVY_PATH when assigned in the First dimension.

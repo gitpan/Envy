@@ -19,4 +19,4 @@ chop @w;
 ok $w[0], 'ERROR: error';
 ok $w[1], 'warn';
 ok $w[2], 'noisy';
-ok $w[3], 'debug';
+ok $w[3], 'D debug';

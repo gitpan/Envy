@@ -3,20 +3,19 @@
 wrapper_usage() {
   echo 'usage: wrapper [-v] [-e envy1 envy2 ...] -s <shell cmd>'
   echo
-  echo  "  By default, wrapper clears all environment variables in order"
-  echo  "  to function exactly as if it was invoked by cron.  If you wish"
+  echo  "  By default, wrapper clears all environment variables to"
+  echo  "  simulate the precise execution of cron jobs.  If you wish"
   echo  "  to disable this behavior, use:"
+  echo
   echo  "    wrapper --preserve_environment ..."
   exit
 }
 
 if [[ $# = 0 ]]; then wrapper_usage; fi
 
-typeset -i i
-wr_i=0
+typeset -i wr_i=0
+typeset -i wr_verbose=0
 wr_preserve=0
-wr_verbose=0
-wr_debug=             # intentionally undocumented
 wr_toload=#STARTUP#
 
 while [[ $1 = -* ]]; do
@@ -29,10 +28,10 @@ while [[ $1 = -* ]]; do
 	wr_commands[$wr_i]=${wr_commands[$wr_i]}" "$2
 	shift
       done
-      if [[ x$i = x1 ]]; then
+      if [[ $wr_i -eq 1 ]]; then
         echo "wrapper: please specify only one shell command"
       fi
-      wr_i=$wr_i+1
+      wr_i=$(($wr_i + 1))
       ;;
 
   -m|-e) while [[ $2 != -* && $# > 1 ]];
@@ -44,9 +43,7 @@ while [[ $1 = -* ]]; do
       done
       ;;
 
-  -v) wr_verbose=1 ;;
-
-  -d) wr_debug=-debug; wr_verbose=1 ;;
+  -v) wr_verbose=$(($wr_verbose + 1)) ;;
 
   *)  echo "wrapper: unknown option '$1' ignored"
       break
@@ -57,11 +54,14 @@ while [[ $1 = -* ]]; do
   fi
 done
 
-if [[ $wr_i = 0 ]]; then wrapper_usage; fi
+if [[ $wr_i -eq 0 ]]; then
+  echo "wrapper: nothing to run!"
+  wrapper_usage
+fi
 
 if test $wr_preserve = 0 -a x$ENVY_VERSION != x; then
   # Envy is already running.  We need to clear the environment!
-  if [ $wr_verbose -eq 1 ]; then
+  if [ $wr_verbose -ne 0 ]; then
     echo "wrapper: cleansing the environment"
   fi
   wr_LOGNAME=$LOGNAME
@@ -92,18 +92,17 @@ wr_envy=$wr_dirname/envy.pl
 test -x $wr_envy || echo "wrapper: 'envy' not found at $wr_envy: PANIC"
 
 if [[ x$wr_toload != x ]]; then
-  if [ $wr_verbose -eq 1 ]; then
+  if [ $wr_verbose -ne 0 ]; then
     echo 'wrapper: eval `'"$wr_envy load $wr_toload"'`'
   fi
-  eval `$wr_envy $wr_debug load $wr_toload`
+  eval `$wr_envy -v$wr_verbose load $wr_toload`
 fi
 
-typeset -i j
-wr_j=$wr_i
+typeset -i wr_j=$wr_i
 wr_i=0
 while [[ $wr_i < $wr_j ]];
 do
-    if [ $wr_verbose -eq 1 ]; then echo "wrapper: ${wr_commands[$wr_i]}"; fi
+    if [ $wr_verbose -ne 0 ]; then echo "wrapper: ${wr_commands[$wr_i]}"; fi
     ${wr_commands[$wr_i]} 
-    wr_i=$wr_i+1
+    wr_i=$(($wr_i + 1))
 done

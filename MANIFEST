@@ -33,6 +33,7 @@ example/area1/etc/envy/pathtest.env
 example/area1/etc/envy/sunpro-4.1.env
 example/area1/etc/envy/sunpro.env
 example/area2/etc/envy/area2.env
+launche.IN
 login.IN
 profile.IN
 rundiff

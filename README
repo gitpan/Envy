@@ -11,7 +11,7 @@ Its narrow scope includes:
 variables in a variety of flexible ways.  All modifications are
 reversible.
 
-* Standardized crontab wrapper.
+* Standardized crontab lauch tool.
 
 * Optional .profile and .login setup.
 
@@ -59,6 +59,11 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1999-09-03 RELEASE 2.45
+
+- 'launche': a replacement for wrapper.
+
+
 ** 1999-08-30 RELEASE 2.44
 
 - Emergency fix for wrapper.
@@ -69,15 +74,6 @@ shell.  Also, you can look at dependencies like this:
 - Trace activity mode (--trace) to show exactly what is happening.
 
 - Avoid storing warnings which will not be output.
-
-
-** 1999-08-04 RELEASE 2.42
-
-- Clearly distinguish errors from warnings.
-
-- Error reporting wasn't happening: repaired.
-
-- Fixed malformed REx detected by perl 5.5.58.
 
 
 see ./INSTALL for hints on installation

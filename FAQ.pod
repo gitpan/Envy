@@ -62,11 +62,14 @@ tool that I know of.
 Put them in $HOME/.envy/.  This directory is always in envy's search
 path.
 
-=head1 WHAT IS WRAPPER?
+=head1 WHAT IS LAUNCHE?
 
-Wrapper is for crontab.  It makes testing crontab entries very easy:
+'lauche' is very similar to 'env' except that instead of setting
+environment variables, it loads envy modules.  There is also a mode
+that exactly simulates the execution environment of crontab.  This
+makes it easy to test cron jobs:
 
-  /path/to/bin/wrapper -m prod myenv -s 'script...'
+  /path/to/bin/launche -c my-env-1.0 -- cmd p1 p2
 
 =head1 HOW DO I MANAGE PERL INSTALLATIONS WITH ENVY?
 
@@ -114,7 +117,7 @@ echo 1. If you are a developer, you might like to be in 'dev' by default:
 echo   echo dev > $HOME/.custom/startup
 echo
 echo 2. If you write crontab scripts, make sure they can run like this:
-echo   env -i $ETOP/bin/wrapper -s 'script...'
+echo   env -i $ETOP/bin/launche -c my-env -- cmd p1 p2 ...
 echo
 echo We realize this is a bit confusing.  If you have any questions,
 echo please don't hesitate to voice your concerns or questions to
@@ -133,6 +136,7 @@ Please send email to envy@listbox.com.
 The following people made significant (and insignificant!)
 contributions to Envy.  May your hair never turn purple!  (Thanks!)
 
+  Vicky Nayer
   Jerry.Hoffman@symbios.com
   Tony.Parent@symbios.com
   Sergei Poliakoff

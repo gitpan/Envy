@@ -49,7 +49,7 @@ my @test = ('test.env' => '$(INST_ETC)/envy/test.env')
 WriteMakefile(@prefix,
 	      NAME => 'Envy',
 	      PREREQ_PM => { Test => 1 },
-	      EXE_FILES => [qw(envy.pl wrapper envied)],
+	      EXE_FILES => [qw(envy.pl wrapper launche envied)],
 	      MAN1PODS => {}, # MANPATH might be unset! :-)
 	      MAN3PODS => {},
 	      PL_FILES => {'set_defaults.PL' => join(' ',values %$subst_files) },
