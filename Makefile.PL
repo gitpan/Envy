@@ -5,7 +5,7 @@ require 5.00405; # probably just need Test?
 use ExtUtils::MakeMaker;
 
 warn "
-       Please read ./INSTALL unless you know what you're doing!
+       Please read ./INSTALL for hints on installing.
 
        Please read ./UPGRADE if you are upgrading.
 

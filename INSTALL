@@ -5,19 +5,13 @@ Envy - A comprehensive multi-dimensional environment manager
 =head1 SYNOPSIS
 
 Installation takes a bit more work beyond simply typing 'make'.  Big
-returns (unfortunately) generally involve navigating big risks.
-Sorry!
+returns sometimes involve negotiating big risks.  Sorry!
 
 =head1 FIRST TIME USERS
 
-It is recommended that you install envy in the privacy of your own
-home directory before risking the disruption of thousands of grumpy
-co-workers.  Before you proceed, print this documentation on paper so
-you can refer to it if something electronic goes amiss.
-
-To install envy, you need to know what is your login shell.  In the
-Unix world, there are mainly two kinds of command line shells
-available.  You can find out which one you have with:
+To install envy, you need to determine the type of your login shell.
+In the Unix world, there are mainly two types of shells.  You can find
+out which one you have with:
 
   echo $SHELL
 
@@ -25,73 +19,21 @@ The following cover installation for both types of shells:
 
 =over 4
 
-=item * SH, KSH, BASH, Etc.
+=head2 INSTALLING
 
-   PERL5PREFIX=$HOME/test; export PERL5PREFIX
-   perl Makefile.PL
-   make test
-   make install
+=item * SH, KSH, BASH, ZSH, Etc.
 
-   # try it out
-   $PERL5PREFIX/bin/wrapper -s echo
-
-   mv $HOME/.profile $HOME/.profile.bak
-   ln -s $PERL5PREFIX/etc/dot.profile $HOME/.profile
+   envy() { eval `envy.pl $*`; }
+   unenvy() { eval `envy.pl -un $*`; }
 
 =item * CSH, TCSH, Etc.
 
-   setenv PERL5PREFIX=$HOME/test
-   perl Makefile.PL
-   make test
-   make install
-
-   # try it out
-   $PERL5PREFIX/bin/wrapper -s echo
-
-   mv $HOME/.login $HOME/.login.bak
-   ln -s $PERL5PREFIX/etc/dot.login $HOME/.login
+   alias envy 'envy.pl -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
+   alias unenvy 'envy.pl -un -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
 
 =back
 
-Be aware that C<bash> uses '.bash_profile' and C<zsh> uses
-'.zprofile'.  Logout and login.  You may find that X Windows did not
-start automatically.  This is a good sign.  Envy is now installed in
-your home directory.
-
-Type 'envy list' or 'envy help'.  Explore.  Get a feel for it.  Create
-a few .env files.  Try out dimensions.  Maybe demo to your office-mate.
-
-=head2 UNINSTALLING
-
-Uninstalling is easy.  None of your old dot files have been deleted,
-just renamed.  To see what has changed recently use:
-
-  cd $HOME; ls -at | more
-
-Simply undo the damage (rm the symlinks and copy your old dot files
-back) and you should be back to normal.
-
-=head2 INSTALLING
-
-By default, envy installs login scripts appropriate for some Unix
-systems.  However, you probably don't need or want them.  I have
-received reports that the default login scripts do not work with
-cmdtool or ssh. All that is really necessary for envy to work
-correctly, besides the perl code, are the following shell functions:
-
-SH:
-
-  envy() { eval `envy.pl $*`; }
-  unenvy() { eval `envy.pl -un $*`; }
-
-CSH:
-
-  alias envy 'envy.pl -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
-  alias unenvy 'envy.pl -un -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
-
-Talk to a system administrator (maybe yourself) about adding these
-functions to the global login scripts.  That's all that is needed
-besides the perl code.
+Now type 'envy help'.  You should see a menu of help options.
 
 =head2 WHY AM I GOING THROUGH ALL THIS HELL?
 
@@ -106,15 +48,13 @@ Envy allows the centralization of configuration files.  When new
 versions of software come out, it is easy to globally publish new
 configuration files in preparation for a gradual and controlled
 migration.  Instead of being locked into backward compatibility, you
-can slowly nudge users into changing in the gentlest possible way.
+can slowly nudge users into changing.
 
 =item * CHOICE
 
-Each user can customize their environment to exactly the right degree.
-Instead of being forced into a global environment or splintering into
-an entirely custom environment, there is flexiblility to customize
-within the globally standardized environment as appropriate for each
-user.
+Each user can customize their environment exactly to the degree they
+want instead of being forced into a global environment or splintering
+into an entirely custom (home directory based) environment.
 
 =item * DEPENDENCIES
 
@@ -135,11 +75,8 @@ executes shell commands.
 
 =head2 ENVY SETUP
 
-Hopefully, you will find envy very easy to set up for your site.  If
-there is any way it can be made easier, please let me know!
-
-Before you 'make install', be sure to 'make test'. Also check
-./Conf.pm and 'make diff'.
+Hopefully, you will find envy very easy to set up for your site.
+Before you 'make install', be sure check ./Conf.pm.
 
 =head1 EXTENSION API
 

@@ -66,7 +66,7 @@ path.
 
 Wrapper is for crontab.  It makes testing crontab entries very easy:
 
-  env -i /path/to/bin/wrapper -m prod myenv -s 'script...'
+  /path/to/bin/wrapper -m prod myenv -s 'script...'
 
 =head1 HOW DO I MANAGE PERL INSTALLATIONS WITH ENVY?
 
@@ -91,9 +91,19 @@ Alternately, scripts can use #!/symlink/to/dev/perl or
 #!/symlink/to/production/perl.  Both techniques may be used in
 managing the full release cycle.
 
-=head1 WHAT IS THE DIFFERENCE BETWEEN AN .ENV FILE AND A .MO FILE?
+=head1 HOW TEST THE STATUS OF ENVY IN A SHELL SCRIPT?
 
-.mo is the old extension.  Otherwise they are identical.
+  if envy myapp-1.0; then echo yes; else echo no; fi
+
+This doesn't work because 'envy' is really a shell function.  You'll
+need something more like this (untested):
+
+  if envy myapp-1.0 > /tmp/envy$$; then
+    echo oops
+  else
+    . /tmp/envy$$
+  fi
+  /bin/rm -f /tmp/envy$$
 
 =head1 WHAT IF USERS ARE RESISTING?
 
@@ -116,7 +126,7 @@ echo
 
 =head1 SUPPORT
 
-Send email to envy@listbox.com.
+Please send email to envy@listbox.com.
 
 =head1 THANKS!
 
@@ -128,3 +138,4 @@ contributions to Envy.  May your hair never turn purple!  (Thanks!)
   Sergei Poliakoff
   Alexander Shugayev
   Devina Kerr White
+  and many others...!

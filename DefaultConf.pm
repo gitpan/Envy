@@ -48,6 +48,6 @@ for (@p) {
 chop($whoami = `which whoami`);
 
 %How = (env0=>\%env0, startup=>$startup, prefix=>$prefix, path=>\@path,
-	whoami=>$whoami);
+	whoami=>$whoami, strictness => 0);
 
 1;

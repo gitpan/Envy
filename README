@@ -62,17 +62,23 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1999-07-14 RELEASE 2.39
+
+Many suggestions from redletter@iname.com:
+
+- Sane exit statuses for envy.pl.
+
+- Change 'echo' to just print instead of acting like a warning.
+
+- Upgraded "Variable '$var' not set" to be an error instead of a
+warning. Also, -strict option to upgrade all warnings to errors.
+
+- Documentation clean up.
+
+
 ** 1999-06-21 RELEASE 2.38
 
 - Built okay with 5.004_05.  Update documentation.
-
-
-** 1999-06-15 RELEASE 2.37
-
-- ENVY_PATH is now used only to find the First dimension.  Moreover,
-it is required that ENVY_PATH be re-assigned in First.  This should
-make it possible to switch between First dimensions correctly.  (Based
-on insightful feedback from Alexander.Shugayev@db.com!)
 
 
 see ./INSTALL for hints on installation

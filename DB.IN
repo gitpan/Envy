@@ -75,7 +75,7 @@ sub _internal_warn {
     $w .= $Context if $Context && $w !~ m/\n$/s;
     $w .= "\n" if $w !~ m/\n$/s;
     push @{$o->{'warn'}}, [$level, $w];
-    ++$o->{errors} if $level == 0;
+    ++$o->{errors} if $level <= $o->{strictness};
     0
 }
 
@@ -187,6 +187,8 @@ sub begin { #PUBLIC
     $o->{'warn'} = [];
     $o->{'log'} = [];
     $o->{errors} = 0;
+    $o->{strictness} = #STRICTNESS#
+	;
     my $v = $o->version;
     $o->w("Envy protocol $v is not supported in this version of Envy (v$VERSION).\nPlease consider upgrading to the latest version!\n")
 	if $v > $EVERSION;
@@ -442,7 +444,7 @@ sub interpolate {
 	    }
 	    return tree_top($rbase);
 	}
-	return $o->w("Variable '$var' not set"), '' if
+	return $o->e("Variable '$var' not set"), '' if
 	    !defined $o->{env}{$var};
 	$o->{env}{$var};
     };
@@ -627,8 +629,12 @@ sub process_envy { #PRIVATE
 		if $mod && $how>=0;
 	} elsif ($l =~ s/^(echo|error)\s?//) {
 	    if ($mod and $how>=0) {
-		my $m = $1 eq 'echo'? 'w':'e';
-		$o->$m($o->interpolate(1,$l)."\n")
+		my $str = $o->interpolate(1,$l)."\n";
+		if ($1 eq 'echo') {
+		    print $str; # ok? XXX
+		} else {
+		    $o->e($str);
+		}
 	    }
 	} elsif ($l =~ s/^desc(ription)?\s+//) {
 	    # need to reset before reading file XXX

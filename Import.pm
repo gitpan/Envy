@@ -1,6 +1,9 @@
 use strict;
 package Envy::Import;
 use Symbol;
+use vars qw($CSH);
+
+$CSH = '/bin/csh';
 
 # I do not fully agree with the implementation of cache_shell_script
 # (contributed by Tony Parent).  Once I have time to study it
