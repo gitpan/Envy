@@ -15,9 +15,10 @@ my $is_showing=0;
 
 sub sync_env {
     my ($db) = @_;
-    exit 1
-	if $db->commit; #FAIL?
+    my $failed = $db->commit;
     for ($db->warnings($warnlevel)) { print }
+    exit 1
+	if $failed;
     $db->write_log if !$is_showing;
     my $old = select STDOUT if !$is_showing;
     for my $z ($db->to_sync()) {

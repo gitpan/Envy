@@ -1,6 +1,6 @@
 #!./perl -w
 use strict;
-use Test; plan test => 2;
+use Test; plan test => 5;
 
 require Envy::DB;
 my $db = Envy::DB->new(\%ENV);
@@ -15,4 +15,7 @@ $db->commit;
 my @w = $db->warnings(4);
 ok @w, 4;
 chop @w;
-ok join(' ',sort @w),'debug error noisy warn';
+ok $w[0], 'ERROR: error';
+ok $w[1], 'warn';
+ok $w[2], 'noisy';
+ok $w[3], 'debug';

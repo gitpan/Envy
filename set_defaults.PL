@@ -114,7 +114,7 @@ use vars qw(@ISA @EXPORT_OK
 @ISA = ('Exporter');
 @EXPORT_OK = qw(%How);
 
-# Prefix (expect $prefix/bin/envy.pl)
+# Prefix (such that $prefix/bin/envy.pl exists)
 $prefix = ]."'$How{prefix}';".q[
 
 # Hardcoded environment

@@ -72,8 +72,11 @@ sub _internal_warn {
     my $w = join('', @_);
     $w .= $Context if $Context && $w !~ m/\n$/s;
     $w .= "\n" if $w !~ m/\n$/s;
+    if ($level <= $o->{strictness}) {
+	$w = 'ERROR: '.$w;
+	++$o->{errors};
+    }
     push @{$o->{'warn'}}, [$level, $w];
-    ++$o->{errors} if $level <= $o->{strictness};
     0
 }
 
@@ -442,7 +445,7 @@ sub interpolate {
 	    }
 	    return tree_top($rbase);
 	}
-	return $o->e("Variable '$var' not set"), '' if
+	return $o->e("Variable '$var' unset for interpolation"), '' if
 	    !defined $o->{env}{$var};
 	$o->{env}{$var};
     };
@@ -662,7 +665,7 @@ sub process_envy { #PRIVATE
 	    $prechange->();
 	    my $str = $o->interpolate(0,$l);
 	    return $o->w("Bad characters in require '$str' (skipping)")
-		if $str !~ /^[\w-.\/]+$/;
+		if $str !~ /^[-\w.\/]+$/;
 	    $o->process_envy(_inherit_how($how), $str, $e);
 
 	} elsif ($l =~ s/^(c)?sh_load\s+//) {
