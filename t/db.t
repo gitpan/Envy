@@ -1,6 +1,6 @@
 # envy -*-perl-*-
 use strict;
-use Test; plan test => 21;
+use Test; plan test => 22;
 %ENV = (REGRESSION_ENVY_PATH => "./example/area1/etc/envy");
 require Envy::DB;
 ok 1;
@@ -47,8 +47,6 @@ ok !$got{OPENWINHOME}, 1;
 envy(0, 'insure');
 ok @w, 0;
 
-#while (my($k,$v)=each %got) { warn "$k $v\n" }
-
 my @p = split(/:+/, $got{PATH});
 ok @p, 3;
 ok $p[0], '/bin.solaris/';
@@ -61,10 +59,13 @@ ok @w, 0, join('',"GOT:\n",@w);
 ok @p, 4;
 ok $p[3], 'appended';
 
+#while (my($k,$v)=each %got) { warn "$k $v\n" }
+
 envy(1, 'append');
 envy(0, 'insure-4.0');
-ok @w, 1;
+ok @w, 3, join('',"GOT:\n",@w);
 ok $w[0], '/Swapping insure/';
+ok $w[1], '/Swapping sunpro/';
 
 #warn join(' ', %got);
 

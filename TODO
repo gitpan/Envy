@@ -1,10 +1,5 @@
 ** TODO
 
-Envy::Util or Envy::UI
-  library of functions to assist in presentation
-  factor envy.IN & DB.IN
-  fuzzy match
-
 Read the $ENVY_PATH one component at a time!  Big performance win on
 slow file-systems (like mine! :-)
 
@@ -21,15 +16,15 @@ real lexical analysis -- use XS?
 improve catalogue
 
 machine generate shell script variants (see Rc)
+  deprecate csh?
   keeps sh/csh in sync
   less chance of bugs
   make compatible with rc/es!
 
 regression tests
   dimension swapping
-  tests for fuzzy match
-  tests for .priv
   top-level switching
+  Envy::UI
 
 comparison operations -
   against the same envy symbolic name

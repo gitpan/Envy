@@ -60,32 +60,18 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1998-11-24 RELEASE 2.26 [STABLE]
+
+- Factored out parts of envy.pl to Envy::UI library.
+
+- Tweaks for smoother dimension swapping.
+
+
 ** 1998-11-20 RELEASE 2.25 [STABLE]
 
 - Extra check for VERSION mismatch between envy.pl & Envy::DB.
 
 - Tweaks for login.IN (patrick@rcsm.ece.mcgill.ca).
-
-
-** 1998-11-08 RELEASE 2.24 [BETA]
-
-- New short-cuts: 'unenvy' for quick unload and $ENVY_VERBOSE to set
-the default verbosity level.
-
-- Envy modules are now reference counted for more accurate dependency
-tracking.  (One of Tony's satoris!)  As a side effect, the symantics
-of ENVY_STATE have changed slightly (but it is still mostly backward
-compatibile).
-
-- Very long (>1000 characters) envy state variables are now split into
-easily digestable chunks.  Added tests.  (Thanks Tony!)
-
-- Implemented an optimal differencing algorithm to minimize
-environment changes.
-
-- Downgraded some errors to manditory warnings.
-
-- Significant Envy::DB API improvements.
 
 
 see ./INSTALL for hints on installation

@@ -3,6 +3,7 @@ use strict;
 use vars qw($VERSION $running_under_some_shell);
 $VERSION = '#VERSION#';
 use Envy::DB qw(@DefaultPath);
+use Envy::UI qw(cmd_2re alength);
 
 warn "[WARNING: Envy version mismatch -- Envy::DB $Envy::DB::VERSION ne $VERSION]\n\n"
     if $Envy::DB::VERSION ne $VERSION;
@@ -23,6 +24,7 @@ sub sync_env {
     my $old = select STDOUT if !$is_showing;
     for my $z ($db->to_sync()) {
 	my ($k,$v) = @$z;
+	# hope that single-quoting is enough XXX
 	if (defined $v) {
 	    if ($is_csh) {
 		print "setenv $k '$v';\n";
@@ -38,15 +40,6 @@ sub sync_env {
 	}
     }
     select $old if $old;
-}
-
-sub cmd_2re {
-    my $cmd = shift;
-    $cmd ||= '*';
-    $cmd =~ tr [\[\]\{\}\(\)\|\$\#\?] //d;
-    $cmd =~ s/\./'\.'/eg;
-    $cmd =~ s/\*/'.*'/eg;
-    $cmd;
 }
 
 sub GO() {
@@ -76,22 +69,18 @@ sub GO() {
     }
 
     if ($cmd eq 'paths') {
-	# horrifying amount of code duplication GACK! XXX
 	$cmd = cmd_2re(shift @ARGV);
-	my ($mo, $ld) = $db->status();
+	my ($mo, $loaded) = $db->all_matching($cmd);
+	my @mo = @$mo;
 	for ($db->warnings($warnlevel)) { print }
-	my %loaded;
-	for (@$ld) { $loaded{$_}=1 }
-	my $l=0;
-	my @mo = sort grep(((/$cmd/i) && ($mo->{$_} !~ /\.priv/)), keys %$mo);
-	for my $m (@mo) { $l = length $m if $l < length $m; }
-	
-	print "Location of envies source code:\n\n";
+	my $l = alength(@mo);
+	print "Location of source files".
+	    ($cmd eq '.*'?'':" matching '$cmd'").":\n\n";
 	for my $m (@mo) {
 	    next if $mo->{$m} =~ /\.priv/; # Hide files in .priv directory
 	    my $NumSpaces = 1 + $l - length $m;
 	    my $desc = $mo->{$m};
-	    print(($loaded{$m}? " x ":"   ").
+	    print(($$loaded{$m}? " x ":"   ").
 		  $m . ' 'x($NumSpaces-1) . " $desc\n");
 	}
 	Huh();
@@ -123,25 +112,22 @@ sub GO() {
 	
     } elsif ($cmd eq "list") {
 	$cmd = cmd_2re(shift @ARGV);
-	my ($mo, $ld) = $db->status();
+	my ($mo, $loaded) = $db->all_matching($cmd);
+	my @mo = @$mo;
 	for ($db->warnings($warnlevel)) { print }
-	my %loaded;
-	for (@$ld) { $loaded{$_}=1 }
-	my $l=0;
-	my @mo = sort grep(((/$cmd/i) && ($mo->{$_} !~ /\.priv/)), keys %$mo);
-	for my $m (@mo) { $l = length $m if $l < length $m; }
-	if($cmd eq ".*"){
+	my $l = alength(@mo);
+
+	if ($cmd eq '.*') {
 	    print "All available envies:\n\n";
-	}else{
-	    print "Available envies matching '$cmd':\n\n";
+	} else {
+	    print "Envies matching '$cmd':\n\n";
 	}
 	for my $m (@mo) {
-	    next if $mo->{$m} =~ /\.priv/; # Hide files in .priv directory
 	    my $NumSpaces = 1 + $l - length $m;
 	    my $padding = "\n" . ' 'x($l+4);
-	    my $desc = $db->description($m) || $mo->{$m};
+	    my $desc = $db->description($m) || '-';
 	    $desc =~ s/\n/$padding/g;
-	    print(($loaded{$m}? " x ":"   ").
+	    print(($$loaded{$m}? " x ":"   ").
 		  $m . ' 'x($NumSpaces-1) . " $desc\n");
 	}
 	Huh();
@@ -150,41 +136,30 @@ sub GO() {
 	&Help(shift @ARGV);
 	
     } else {
-	my ($mo, $ld) = $db->status();
-	my %loaded;
-	for (@$ld) { $loaded{$_}=1 }
-	my @mo;
-	foreach (sort keys %$mo){
-	    push(@mo,$_) if($mo->{$_} !~ /\.priv/); # hide .priv directory files
-	}
-	if (@mo > 1) {
-	    my @exact = sort grep(/^$cmd$/i, keys %$mo);
-	    if (@exact == 1) {
-		@mo = @exact;
-	    } else {
-		@mo = sort grep(((/$cmd/i) && ($mo->{$_} !~ /\.priv/)), keys %$mo);
-	    }
-	}
+	my ($mo, $loaded) = $db->try_match($cmd);
+	for ($db->warnings($warnlevel)) { print }
+	my @mo = @$mo;
 	if (@mo == 0) {
 	    print "Envy '$cmd' not found.\n";
 	} elsif (@mo == 1) {
-	    my $mo = $mo[0];
-	    $db->check_fuzzy($mo);
-	    $db->envy($is_unload, $mo);
+	    $db->envy($is_unload, $mo[0]);
 	    sync_env($db);
 	    return;
 	}
-	for ($db->warnings($warnlevel)) { print }
-	@mo = grep(!/^\./, @mo); # hide dot files
+	if ($cmd eq '.*') {
+	    print "All available envies:\n\n";
+	} else {
+	    print "Envies matching '$cmd':\n\n";
+	}
 	use integer;
 	my $mid = (1+@mo)/2;
 	for (my $i=0; $i < $mid; $i++) {
 	    my $m = $mo[$i];
-	    print $loaded{$m}? " x " : "   ";
+	    print $$loaded{$m}? " x " : "   ";
 	    print $m.' 'x(34-length $m);
 	    if ($mo[$i+$mid]) {
 		my $m = $mo[$i+$mid];
-		print $loaded{$m}? " x " : "   ";
+		print $$loaded{$m}? " x " : "   ";
 		print $m;
 	    }
 	    print "\n";

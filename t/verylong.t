@@ -2,7 +2,7 @@
 use strict;
 BEGIN { %ENV = (REGRESSION_ENVY_PATH => "./example/area1/etc/envy"); }
 use Envy::DB;
-use Test; plan test => 8;
+use Test; plan test => 9;
 $Envy::DB::MAX_VAR_LENGTH = 1;
 
 my $db = Envy::DB->new(\%ENV);
@@ -55,6 +55,7 @@ envy(1, 'area1');
 
 # expecting no warnings
 my @w = $db->warnings(2);
-ok @w, 0, join('',"GOT:\n",@w);
+ok @w, 1, join('',"GOT:\n",@w);
+ok $w[0], '/^First dimension/';
 
 #while (my($k,$v)=each %got) { warn "$k $v\n" }

@@ -342,9 +342,12 @@ sub nav_dimension { #PRIVATE
 	$o->{first} = $by
 	    if $di eq 'First';
     } else {
-	$o->w("Envy '$by' releasing $di (was '$old')")
-	    if $old && $old ne $by;  # unlikely to occur
-	$o->{dimen}{$di} = undef;    # don't delete!
+	if (0) {
+	    # only positive transitions
+	    $o->w("Envy '$by' releasing $di (was '$old')")
+		if $old && $old ne $by;  # unlikely to occur
+	    $o->{dimen}{$di} = undef;    # don't delete!
+	}
     }
     $swap;
 }
@@ -592,7 +595,7 @@ sub process_envy { #PRIVATE
     local $Path = $o->get_fullpath($e);
     return $o->w("Can't find envy '$e' (skipping)")
 	if !$Path;
-    return $o->w("Envy '$e' re-unloaded")
+    return $o->n("Envy '$e' re-unloaded")
 	if $how<0 && $o->get_refcnt($e)==0;
 
     my $swap;
@@ -803,9 +806,15 @@ sub description { #PUBLIC
 }
 
 sub status { #PUBLIC
+    carp 'status is deprecated';
     my ($o) = @_;
     my @loaded = keys %{$o->{loaded}};
     ($o->get_fullpath(),\@loaded);
+}
+
+sub status2 { #PUBLIC
+    my ($o) = @_;
+    ($o->get_fullpath(),$o->{loaded});
 }
 
 sub quick_status { #PUBLIC
