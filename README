@@ -3,9 +3,9 @@ Sick of an endlessly growing PATH?  Me too!
 Envy does shell-independent environment variable management.
 
 
-Envy tries to avoid being ambitious.  It is designed as a narrow tool
-to solve a specific and practical problem without going wildly
-overboard.  Its modest scope includes:
+Envy attempts to avoid ambition.  It is designed as a narrow tool to
+solve a specific and practical problem without going wildly overboard.
+Its narrow scope includes:
 
 * A mechanism is provided for setting and prepending environment
 variables in a variety of flexible ways.  All modifications are
@@ -59,20 +59,20 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1999-08-27 RELEASE 2.43
+
+- Trace activity mode (--trace) to show exactly what is happening.
+
+- Avoid storing warnings which will not be output.
+
+
 ** 1999-08-04 RELEASE 2.42
 
 - Clearly distinguish errors from warnings.
 
-- Error reporting wasn't: repaired.
+- Error reporting wasn't happening: repaired.
 
 - Fixed malformed REx detected by perl 5.5.58.
-
-
-** 1999-07-21 RELEASE 2.41
-
-- Re-search ENVY_PATH when assigned in the First dimension.
-
-- Avoid whoami.
 
 
 see ./INSTALL for hints on installation

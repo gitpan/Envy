@@ -1,7 +1,6 @@
 # ------------------------------------------------------*-perl-*-
 # GHOSTWHEEL DIMENSION MULTIPLEXER
 #
-# use 5.005;  ???
 use strict;
 package Envy::DB;
 use integer;
@@ -10,8 +9,9 @@ use Symbol;
 use Fcntl;
 use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $MAX_VAR_LENGTH
-	    $LOGIN $Context $Loop $Path @FORCEPATH);
+	    $LOGIN $Context $NestLevel $Loop $Path @FORCEPATH);
 $VERSION = '#VERSION#';
+$NestLevel = 0;
 
 umask 0;  # Figure out how to run setuid 'envy'? XXX
 
@@ -24,6 +24,7 @@ sub PATH()        { 'ENVY_PATH'      }
 sub STATE()       { 'ENVY_STATE'     }
 sub DIMENSION()   { 'ENVY_DIMENSION' }
 sub CONTEXT()     { 'ENVY_CONTEXT'   }
+sub VERBOSE()     { 'ENVY_VERBOSE'   }
 
 if ($ENV{REGRESSION_ENVY_PATH}) {
     @DefaultPath = split m/\s+/, $ENV{REGRESSION_ENVY_PATH};
@@ -43,6 +44,7 @@ sub new { #PUBLIC
     $o->{where} = $o->{env}{ &CONTEXT } || 'shell';
     $o->{desc} = {};
     $o->{transaction} = 0;
+    $o->{warnlevel} = $o->{env}{ &VERBOSE } || 1;
     $o->begin;
     $o;
 }
@@ -56,27 +58,37 @@ sub version {
 # ---------------------------------------------------------------
 # MESSAGES
 
-sub e { shift->_internal_warn(0, @_) }   # abort transaction
-sub w {                                  # manditory warning
-    if ($_[1] =~ m/^\d$/) {
-	Carp::cluck "Warning level should not be specified";
+sub warnlevel {
+    my $o=shift;
+    if (@_) {
+	$o->{warnlevel} = shift;
+    } else {
+	$o->{warnlevel}
     }
-    shift->_internal_warn(1, @_)
 }
-sub n { shift->_internal_warn(2, @_) }   # optional warning
-sub d { shift->_internal_warn(3, @_) }   # debugging info
+
+sub e { my $o=shift; _internal_warn($o, 0, 1, @_) }   # abort transaction
+sub w { my $o=shift; _internal_warn($o, 1, 1, @_) }   # manditory warning
+sub n { my $o=shift; _internal_warn($o, 2, 1, @_) }   # optional warning
+sub t { my $o=shift; _internal_warn($o, 3, 0, @_) }   # trace execution
+sub d { my $o=shift; _internal_warn($o, 4, 0, @_) }   # debugging info
 
 sub _internal_warn {
-    my $o = shift;
-    my $level = shift;
+    my ($o, $level, $show_context) = splice @_, 0, 3;
     my $w = join('', @_);
-    $w .= $Context if $Context && $w !~ m/\n$/s;
+    if ($show_context) {
+	$w .= $Context
+	    if $Context && $w !~ m/\n$/s;
+    } else {
+	$w = ('  'x$NestLevel).$w;
+    }
     $w .= "\n" if $w !~ m/\n$/s;
     if ($level <= $o->{strictness}) {
 	$w = 'ERROR: '.$w;
 	++$o->{errors};
     }
-    push @{$o->{'warn'}}, [$level, $w];
+    push @{$o->{'warn'}}, $w
+	if $level <= $o->{warnlevel};
     0
 }
 
@@ -115,7 +127,7 @@ sub search_envy_path { #PRIVATE
 	$o->d("Reading $p...\n");
 	
 	my $dh = gensym;
-	opendir($dh, $p) or return $o->d("Directory '$p' not readable.\n");
+	opendir($dh, $p) or return $o->n("Directory '$p' not readable.\n");
 	for my $m (readdir($dh)) {
 	    next if $m !~ m/\.(mo|env)$/;
 	    next if -d "$p/$m";
@@ -491,10 +503,13 @@ sub assign {
     if (!$reverse) {
 	$o->n("Variable '$k' redefined") if
 	    (!$force and exists $o->{env}{$k});
-	$o->{env}{$k} = $o->interpolate(1,$v);
+	my $vinterp = $o->interpolate(1,$v);
+	$o->{env}{$k} = $vinterp;
+	$o->t("$k=$vinterp");
     }
     else {
 	delete $o->{env}{$k};
+	$o->t("unset $k");
     }
 }
 
@@ -519,6 +534,9 @@ sub rejoin {
     my @delta = split /$sep+/, $o->interpolate(0,$v);
     my %delta; for (@delta) { $delta{$_}=1 }
     my @now;
+
+    my $sign = $reverse?'-':'+';
+    $o->t("$k".($prepend?"$sign=":"=$sign").join($sep, @delta));
 
     # filter @old with @delta -> @now
     if ($k eq 'PATH') {
@@ -590,6 +608,7 @@ sub process_envy { #PRIVATE
 	return;
     }
 
+    $o->t("[$how] $e ($Path)");
     my $swap;
     my $mod = !(abs($how)<=1 and ($how>=0 xor $o->get_refcnt($e)==0));
 #    warn "$e $how $by mod=$mod\n";
@@ -623,6 +642,7 @@ sub process_envy { #PRIVATE
 
 	local $Context = (" at ".($how>=0?'':'un').
 			  "envy '$e' line $line\n\t".$Context);
+	local $NestLevel = $NestLevel + 1;
 
 	if ($l =~ /^(alpha|beta|deprecated)$/) {
 	    $o->w("Envy '$e' is ".uc($1).", use at your own risk")
@@ -737,6 +757,7 @@ sub process_envy { #PRIVATE
 	}
     }
 
+    $o->t("[$how] $e DONE");
     $LOGIN ||= getlogin || getpwuid($<) || "?";
     push @{$o->{'log'}}, { when => time(), who => $LOGIN,
 			   action => ($how<0?'un':'').'load',
@@ -811,11 +832,12 @@ sub to_sync { #PUBLIC
 # ---------------------------------------------------------------
 
 sub warnings { #PUBLIC
-    my ($o, $level) = @_;
+    my ($o) = @_;
+    Carp::cluck "use warnlevel instead of warnings(level)"
+	if @_ == 2;
     my $all = $o->{'warn'};
     $o->{'warn'} = [];
-    $level = 1 if !defined $level;
-    map { $_->[1] } grep { $_->[0] <= $level } @$all;
+    @$all;
 }
 
 sub description { #PUBLIC

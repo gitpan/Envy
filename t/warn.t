@@ -4,6 +4,7 @@ use Test; plan test => 5;
 
 require Envy::DB;
 my $db = Envy::DB->new(\%ENV);
+$db->warnlevel(4);
 
 $db->e('error');
 $db->w('warn');
@@ -12,7 +13,7 @@ $db->d('debug');
 
 $db->commit;
 
-my @w = $db->warnings(4);
+my @w = $db->warnings;
 ok @w, 4;
 chop @w;
 ok $w[0], 'ERROR: error';

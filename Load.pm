@@ -12,7 +12,7 @@ sub import {
 	$db->envy(0, $pkg);
     }
     $db->commit;
-    for ($db->warnings(1)) { print STDERR $_; }
+    for ($db->warnings) { print STDERR $_; }
     $me->sync($db);
 }
 
@@ -42,7 +42,7 @@ sub load {
     }
     $db->commit;
     $e->sync($db);
-    for ($db->warnings(1)) { print STDERR $_; }
+    for ($db->warnings) { print STDERR $_; }
 }
 
 sub DESTROY {

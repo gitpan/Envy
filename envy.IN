@@ -8,7 +8,6 @@ use Envy::UI qw(cmd_2re alength);
 warn "[WARNING: Envy version mismatch -- Envy::DB $Envy::DB::VERSION ne $VERSION]\n\n"
     if $Envy::DB::VERSION ne $VERSION;
 
-my $warnlevel = $ENV{ENVY_VERBOSE} || 1;
 my $is_unload=0;
 my $is_csh=0;
 my $is_showing=0;
@@ -16,7 +15,7 @@ my $is_showing=0;
 sub sync_env {
     my ($db) = @_;
     my $failed = $db->commit;
-    for ($db->warnings($warnlevel)) { print }
+    for ($db->warnings) { print }
     exit 1
 	if $failed;
     $db->write_log if !$is_showing;
@@ -87,7 +86,8 @@ sub Help {
    -quiet                       - Only report errors
    -v\\d                         - Set verbosity level
    -strict 1                    - Upgrade warnings to errors.
-   -debug                       - Maximum verbosity
+   --trace                      - Trace activity
+   --debug                      - Maximum verbosity
 
 ";
     } elsif ($page eq 'custom') {
@@ -178,10 +178,11 @@ while (@ARGV and $ARGV[0] =~ m/^\-/) {
     my $arg = shift @ARGV;
     if    ($arg eq '-csh')           { $is_csh=1 }
     elsif ($arg eq '-un')            { $is_unload=1 }
-    elsif ($arg =~ m/^-q(uiet)?$/)   { $warnlevel = 0 }
-    elsif ($arg eq '-debug')         { $warnlevel = 5 }
-    elsif ($arg eq '-v')             { ++$warnlevel }
-    elsif ($arg =~ m/^-v(\d*)/)      { $warnlevel = length $1? $1 : 2; }
+    elsif ($arg =~ m/^-q(uiet)?$/)   { $db->warnlevel(0) }
+    elsif ($arg eq '--trace')        { $db->warnlevel(3) }
+    elsif ($arg eq '--debug')        { $db->warnlevel(4) }
+    elsif ($arg eq '-v')             { $db->warnlevel($db->warnlevel() + 1) }
+    elsif ($arg =~ m/^-v(\d*)/)      { $db->warnlevel(length $1? $1 : 2); }
     elsif ($arg =~ m/^(-h|--help)$/) { select STDERR; &Help; exit }
     elsif ($arg eq '-strict')        { $db->{strictness} = shift @ARGV } #XXX
     else {
@@ -202,7 +203,7 @@ if ($cmd eq 'show' and @ARGV >= 1 and $ARGV[0] eq 'paths') {
 if ($cmd eq 'paths') {
     $cmd = cmd_2re(shift @ARGV);
     my ($mo, $loaded) = $db->all_matching($cmd);
-    for ($db->warnings($warnlevel)) { print }
+    for ($db->warnings) { print }
     my $l = alength(keys %$mo);
     print "Location of source files".
 	($cmd eq '.*'?'':" matching '$cmd'").":\n\n";
@@ -262,7 +263,7 @@ elsif ($cmd eq "load" or $cmd eq "reload") {
 } elsif ($cmd eq "list") {
     $cmd = cmd_2re(shift @ARGV);
     my ($mo, $loaded) = $db->all_matching($cmd);
-    for ($db->warnings($warnlevel)) { print }
+    for ($db->warnings) { print }
     my $l = alength(keys %$mo);
     
     if ($cmd eq '.*') {
@@ -291,7 +292,7 @@ elsif ($cmd eq "load" or $cmd eq "reload") {
     
 } else {
     my ($mo, $loaded) = $db->try_match($cmd);
-    for ($db->warnings($warnlevel)) { print }
+    for ($db->warnings) { print }
     my @mo = @$mo;
     if (@mo == 0) {
 	print "Envy '$cmd' not found.\n";

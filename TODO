@@ -1,5 +1,7 @@
 ** TODO
 
+there's definitely some problem with 'reload'...?
+
 Read the $ENVY_PATH one component at a time!  Big performance win on
 slow file-systems (like mine! :-)
 

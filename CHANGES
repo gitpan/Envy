@@ -1,3 +1,10 @@
+** 1999-07-21 RELEASE 2.41
+
+- Re-search ENVY_PATH when assigned in the First dimension.
+
+- Avoid whoami.
+
+
 ** 1999-07-14 RELEASE 2.40
 
 - Doc tweaks.

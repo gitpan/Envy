@@ -13,6 +13,7 @@ my $db = Envy::DB->new(\%ENV);
 ok 2;
 
 sub envy {
+    $db->warnlevel(2);
     $db->begin;
     $db->envy(@_);
     $db->commit;
@@ -23,7 +24,7 @@ sub envy {
 	    delete $got{$_->[0]};
 	}
     }
-    @w = $db->warnings(2);
+    @w = $db->warnings();
 }
 
 envy(0, 'area1');

@@ -9,6 +9,7 @@ my $db = Envy::DB->new(\%ENV);
 
 my %got;
 sub envy {
+    $db->warnlevel(2);
     $db->begin;
     $db->envy(@_);
     $db->commit;
@@ -54,7 +55,7 @@ ok $dim{sunpro}, 'SUNWspro-4.2';
 envy(1, 'area1');
 
 # expecting no warnings
-my @w = $db->warnings(2);
+my @w = $db->warnings;
 ok @w, 0;
 
 #while (my($k,$v)=each %got) { warn "$k $v\n" }
