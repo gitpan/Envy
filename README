@@ -18,12 +18,18 @@ reversible.  I think reversibility is important.
 centrally specified bootstrapping environment variables.  Most other
 variable can be determined via modular configuration files.
 
-Get it via http://www.perl.com/CPAN/authors/id/JPRIT/ !
+Available at http://www.perl.com/CPAN/authors/id/JPRIT/ !
 
 
 ##################
 # RECENT CHAN@ES #
 ##################
+
+
+** 1998-09-12 RELEASE 2.20
+
+- Simplified configuration even more.  Once you install envy once, it
+will remember the installation settings across subsequent upgrades.
 
 
 ** 1998-09-11 RELEASE 2.19

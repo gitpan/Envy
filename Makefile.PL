@@ -7,6 +7,17 @@ warn q[
 
 ];
 
+use Symbol;
+my $fh = gensym;
+if (open $fh, ">Conf.pm") {
+  print $fh "0\n";
+  close $fh;
+}
+
+if (-d "./blib") {
+  system "rm -rf ./blib";
+}
+
 unlink "./example/area1/etc/envy/area2.env";
 symlink "../../../../example/area2/etc/envy/area2.env",
     "./example/area1/etc/envy/area2.env" or warn $!;
@@ -35,7 +46,8 @@ WriteMakefile(@prefix,
 	      PL_FILES => {'set_defaults.PL' => join(' ', values %$subst_files) },
 	      VERSION_FROM => 'DB.IN',
 	      PM => {
-		     'Config.pm' => '$(INST_LIBDIR)/Envy/Config.pm',
+		     'Conf.pm' => '$(INST_LIBDIR)/Envy/Conf.pm',
+		     'DefaultConf.pm' => '$(INST_LIBDIR)/Envy/DefaultConf.pm',
 		     'Load.pm' => '$(INST_LIBDIR)/Envy/Load.pm',
 		     'DB.pm' => '$(INST_LIBDIR)/Envy/DB.pm',
 		     @test,
@@ -55,17 +67,18 @@ sub MY::postamble {
 
     while (my($k,$v)=each %$subst_files) {
 	$str .= "
-$v :: $k set_defaults.PL Config.pm".'
+$v :: $k set_defaults.PL Conf.pm DefaultConf.pm ".'
 	$(PERL) -I$(INST_ARCHLIB) -I$(INST_LIB) -I$(PERL_ARCHLIB) -I$(PERL_LIB) set_defaults.PL'."\n";
     }
     $str .= "
 clean ::
+	echo 0 > Conf.pm
 	rm -f ".join(' ', values %$subst_files)."\n";
     
     $str .=
     q{
 
-set_defaults.PL :: Config.pm
+set_defaults.PL :: Conf.pm DefaultConf.pm
 
 pure_site_install ::
 	}.$self->{NOECHO}.q{$(MOD_INSTALL) \

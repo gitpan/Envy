@@ -4,7 +4,7 @@ use vars qw($running_under_some_shell);
 use Envy::DB qw(@DefaultPath);
 
 # If you want to reuse any of the code in this file, let me
-# know and I'll move it to Envy::UI or somesuch.
+# know and I'll move it to Envy::UI or somesuch.  Thanks!
 
 my $warnlevel = 1;
 my $is_csh=0;
@@ -89,7 +89,7 @@ sub GO() {
 	my $l=0;
 	my @mo = sort grep(/$cmd/i, keys %$mo);
 	for my $m (@mo) { $l = length $m if $l < length $m; }
-	print "All envys currently available ($Envy::DB::VERSION):\n\n";
+	print "All currently available envies:\n\n";
 	for my $m (@mo) {
 	    my $file = $mo->{$m};
         next if($file =~ /\.priv/); # Hide files in .priv directory
@@ -112,7 +112,11 @@ sub GO() {
 	}
 	if (@mo > 1) {
 	    my @exact = sort grep(/^$cmd$/i, keys %$mo);
-	    @mo = @exact if @exact == 1;
+	    if (@exact == 1) {
+		@mo = @exact;
+	    } else {
+		@mo = sort grep /$cmd/i, keys %$mo;
+	    }
 	}
 	if (@mo == 0) {
 	    print "Envy '$cmd' not found.\n";

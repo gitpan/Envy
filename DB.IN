@@ -1,4 +1,4 @@
-# ghostwheel dimension multiplexer a la -*-perl-*-
+# ghostwheel dimension multiplexer a la -*-perl-*- !
 
 # use 5.005;  ???
 use strict;
@@ -11,7 +11,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $LOGIN $Reloading $Context $Loop $Path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(@DefaultPath);
-$VERSION = '2.19';
+$VERSION = '2.20';
 
 umask 0;  # Figure out how to run setuid 'envy' XXX
 

@@ -1,6 +1,9 @@
 ** TODO
 
-pipe through $ENV{PAGER}
+send build configuration to a file?
+
+pipe long output through $ENV{PAGER}
+  can't mess with envy.pl because shell is eval STDOUT!
 
 Maybe it is possible to read the $ENVY_PATH one component at a time?
 Seems yes..?  Potentially big performance win.
@@ -11,7 +14,7 @@ real lexical analysis
 
 short cuts:
   unenvy : envy unload
-  envy !3trade : unload
+  unload by dimension?
 
 regression tests
   dimension swapping

@@ -35,7 +35,7 @@ sub show {
 
 my $dspace = ' '.'-'x($dlen+2).'+';
 print $dspace.('-'x(75-length $dspace))."\n";
-printf $fmt, 'DIMENSION', '', 'ENVY';
+printf $fmt, 'DIMENSION', '', 'ENVIED';
 print $dspace.('-'x(75-length $dspace))."\n";
 
 for my $level (0,1,2) {

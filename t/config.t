@@ -3,15 +3,17 @@
 use strict;
 use Test; plan test => 2;
 
+delete $ENV{PERL5PREFIX};
+
 $ENV{ENVY_PATH} = join(':', '/my/site/path/bin', '/my/custom/path/bin');
 $ENV{ENVY_DIMENSION} = join(':', 'First,qsg','objstore,objstore');
 
-require './Config.pm';
+require './DefaultConf.pm';
 
-package Envy::Config;
-use vars qw($default_startup $default_path);
+package Envy::DefaultConf;
+use vars qw($startup @path);
 use Test;
 
-ok join(':',eval $default_path), $ENV{ENVY_PATH}, $@;
-ok $default_startup, 'qsg';
+ok join(':', @path), $ENV{ENVY_PATH}, $@;
+ok $startup, 'qsg';
 
