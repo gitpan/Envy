@@ -3,7 +3,7 @@ package Envy::DefaultConf;
 require Exporter;
 use Config;
 use vars qw(@ISA @EXPORT_OK
-	    %How %env0 $startup $prefix @path $whoami);
+	    %How %env0 $startup $prefix @path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(%How);
 
@@ -45,9 +45,7 @@ for (@p) {
     $path_ok{$_} = 1;
 }
 
-chop($whoami = `which whoami`);
-
 %How = (env0=>\%env0, startup=>$startup, prefix=>$prefix, path=>\@path,
-	whoami=>$whoami, strictness => 0);
+	strictness => 0);
 
 1;

@@ -16,6 +16,7 @@ typeset -i i
 wr_i=0
 wr_preserve=0
 wr_verbose=0
+wr_debug=             # intentionally undocumented
 wr_toload=#STARTUP#
 
 while [[ $1 = -* ]]; do
@@ -44,6 +45,8 @@ while [[ $1 = -* ]]; do
       ;;
 
   -v) wr_verbose=1 ;;
+
+  -d) wr_debug=-debug; wr_verbose=1 ;;
 
   *)  echo "wrapper: unknown option '$1' ignored"
       break
@@ -75,7 +78,7 @@ SHELL=/bin/sh; export SHELL
 # Is it unlikely that LOGNAME or HOME will not be prepared, however,
 # better safe than sorry.
 if [ x$LOGNAME == x  ]; then
-  LOGNAME=`#WHOAMI#`; export LOGNAME
+  LOGNAME='root'; export LOGNAME
 fi
 if [ x$HOME == x ]; then
   HOME=/home/$LOGNAME; export HOME
@@ -88,8 +91,10 @@ wr_dirname=`dirname $0`
 wr_envy=$wr_dirname/envy.pl
 test -x $wr_envy || echo "wrapper: 'envy' not found at $wr_envy: PANIC"
 
-eval `$wr_envy load $wr_toload`
-if [ $wr_verbose -eq 1 ]; then echo 'wrapper: eval `'"$wr_envy load $wr_toload"'`'; fi
+if [ $wr_verbose -eq 1 ]; then
+  echo 'wrapper: eval `'"$wr_envy load $wr_toload"'`'
+fi
+eval `$wr_envy $wr_debug load $wr_toload`
 
 typeset -i j
 wr_j=$wr_i

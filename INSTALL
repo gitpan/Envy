@@ -35,6 +35,10 @@ The following cover installation for both types of shells:
 
 Now type 'envy help'.  You should see a menu of help options.
 
+Full installation is not exactly straightforward.  To integrate envy
+into your facilities, consider the example profile.IN & login.IN.  I
+hope to have better documentation in the future!
+
 =head2 WHY AM I GOING THROUGH ALL THIS HELL?
 
 Because envy could solve some of your tenacious, long standing

@@ -17,7 +17,7 @@ set ENVY_CONTEXT=STARTUP
 set ENVY=#ENVY.PL#
 test -x $ENVY || echo Envy not found at ${ENVY}: PANIC
 
-$ENVY -csh $startup > /tmp/mod.$$
+$ENVY -csh load $startup > /tmp/mod.$$
 source /tmp/mod.$$
 if ($?debug) cat /tmp/mod.$$
 /bin/rm /tmp/mod.$$

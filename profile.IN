@@ -24,7 +24,7 @@ ENVY_CONTEXT=STARTUP
 ENVY=#ENVY.PL#
 test -x $ENVY || echo Envy not found at $ENVY: PANIC
 
-$ENVY $startup > /tmp/mod.$$
+$ENVY load $startup > /tmp/mod.$$
 . /tmp/mod.$$
 rm /tmp/mod.$$
 

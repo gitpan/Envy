@@ -59,9 +59,16 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1999-07-21 RELEASE 2.41
+
+- Re-search ENVY_PATH when assigned in the First dimension.
+
+- Avoid whoami.
+
+
 ** 1999-07-14 RELEASE 2.40
 
-- Doc tweaks. (cpan-testers: Don't bother, this is the same as 2.39.)
+- Doc tweaks.
 
 
 ** 1999-07-14 RELEASE 2.39
@@ -76,11 +83,6 @@ Many suggestions from redletter@iname.com:
 warning. Also, -strict option to upgrade all warnings to errors.
 
 - Documentation clean up.
-
-
-** 1999-06-21 RELEASE 2.38
-
-- Built okay with 5.004_05.  Update documentation.
 
 
 see ./INSTALL for hints on installation

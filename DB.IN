@@ -11,8 +11,6 @@ use Fcntl;
 use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $MAX_VAR_LENGTH
 	    $LOGIN $Context $Loop $Path @FORCEPATH);
-@ISA = ('Exporter');
-@EXPORT_OK = qw(@DefaultPath);
 $VERSION = '#VERSION#';
 
 umask 0;  # Figure out how to run setuid 'envy'? XXX
@@ -556,7 +554,6 @@ sub rejoin {
     } else {
 	delete $o->{env}{$k};
     }
-    $o->search_envy_path if $k eq &PATH;
 }
 
 # ---------------------------------------------------------------
@@ -692,6 +689,7 @@ sub process_envy { #PRIVATE
 	    }
 	    $o->rejoin($how<0, @got)
 		if $mod;
+	    $o->search_envy_path if $got[0] eq &PATH;
 
 	} elsif ($l =~ /^([\w-]+) (:)?= (.*)$/x) {
 	    my @got = ($1,$2,$3);
@@ -701,6 +699,7 @@ sub process_envy { #PRIVATE
 	    }
 	    $o->assign($how<0, @got)
 		if $mod;
+	    $o->search_envy_path if $got[0] eq &PATH;
 
 	} else {
 	    # Newer version of envy knows about new tokens...?

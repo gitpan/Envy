@@ -95,7 +95,6 @@ my $subst = {
 	     '#SEARCH#' => "qw(".join(' ',@{$How{path}}).")",
 	     '#STARTUP#' => $How{startup},
 	     '#STRICTNESS#' => $How{strictness},
-	     '#WHOAMI#' => $How{whoami},
 	     '#VERSION#' => $VERSION,
 	    };
 
@@ -111,23 +110,20 @@ use strict;
 package Envy::Conf;
 require Exporter;
 use vars qw(@ISA @EXPORT_OK
-	    %How %env0 $startup $strictness $prefix @path $whoami);
+	    %How %env0 $startup $strictness $prefix @path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(%How);
 
-# Default $ENVY_PATH
-@path = qw(
-].join('', map { "\t$_\n" } @{$How{path}}).q[);
-
-# Prefix
+# Prefix (expect $prefix/bin/envy.pl)
 $prefix = ]."'$How{prefix}';".q[
-
-# How to get login name
-$whoami = ]."'$How{whoami}';".q[
 
 # Hardcoded environment
 %env0 = (
 ].join('',map { "\t'$_' => '$$env0{$_}',\n" } sort keys %$env0) .q[);
+
+# Where to find the First dimension
+@path = qw(
+].join('', map { "\t$_\n" } @{$How{path}}).q[);
 
 # First dimension
 $startup = ]."'$How{startup}';".q[
@@ -139,7 +135,7 @@ $strictness = ].$How{strictness}.q[;
 # All done; now collect all settings into an easy to use hash:
 #
 %How = (env0=>\%env0, startup=>$startup, prefix=>$prefix, path=>\@path,
-	whoami=>$whoami, strictness=>$strictness);
+	strictness=>$strictness);
 
 1;
 ];

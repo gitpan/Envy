@@ -2,7 +2,7 @@
 use strict;
 use vars qw($VERSION $running_under_some_shell);
 $VERSION = '#VERSION#';
-use Envy::DB qw(@DefaultPath);
+use Envy::DB;
 use Envy::UI qw(cmd_2re alength);
 
 warn "[WARNING: Envy version mismatch -- Envy::DB $Envy::DB::VERSION ne $VERSION]\n\n"
@@ -63,7 +63,8 @@ sub Help {
      envy help path     for an explaination of search paths
      envy help env      for a list of envy specific environment variables
      envy help license  for licensing information
-     envy help custom   for a description of \$HOME/.custom/ files
+
+     envy help custom   for a description of \$HOME/.custom/ files [OPTIONAL]
 
   Send email to envy\@listbox.com for support.  Thanks!
 
@@ -131,15 +132,9 @@ sub Help {
 
 ";
     } elsif ($page eq 'path') {
-	my $w=0;
-	my %def;
-	my @cur = split /:+/, $ENV{ENVY_PATH};
-	for (@cur) { $w = length if length > $w }
-	for (@DefaultPath) { $def{$_} = 1 }
-	@cur = map { sprintf("%-$ {w}s  %s", $_, $def{$_}? '#default':'') } @cur;
 	print "
    Current search path (order is observed):
-     ".join("\n     ", @cur)."
+     ".join("\n     ", split /:+/, $ENV{ENVY_PATH})."
 
    All search paths also include the .priv directory (if found).
 
@@ -149,13 +144,14 @@ sub Help {
 ";
     } elsif ($page eq 'env') {
 	print "
-   \$ETOP           - Prefix for login scripts.
    \$ENVY_PATH      - Colin separated search path.  Envies are typically
                      installed in \$ETOP/env/envy.  See 'envy help path' too.
    \$ENVY_STATE     - Keeps track of which modules are loaded & dependencies.
    \$ENVY_DIMENSION - Keeps track of dimensions.
    \$ENVY_VERSION   - Envy protocol version.
    \$ENVY_VERBOSE   - Default verbosity level.
+
+   \$ETOP           - Prefix for login scripts. [OPTIONAL]
 
 ";
     } elsif ($page eq 'copy' or $page eq 'license') {
