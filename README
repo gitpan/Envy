@@ -7,19 +7,16 @@ Envy tries to avoid being ambitious.  It is designed as a narrow tool
 to solve a specific and practical problem without going wildly
 overboard.  Its modest scope includes:
 
-1. Easy, safe conversion from any other dot-file setup.  Works with
-sh, ksh, bash, zsh, csh, and tcsh.  Support for rc & es would not be
-difficult.
-
-2. A mechanism is provided for setting and prepending environment
+* A mechanism is provided for setting and prepending environment
 variables in a variety of flexible ways.  All modifications are
-reversible.  I think reversibility is important.
+reversible.
 
-3. Standardized, customizable, machine generated .profile, .login, and
-crontab wrappers.
+* Standardized crontab wrapper.
+
+* Optional .profile and .login setup.
 
 Available at http://www.perl.com/CPAN/authors/id/JPRIT/ !
-  (Requires perl 5.004_05 or newer.)
+  (Probably requires perl 5.004_05 but older version might work too.)
 
 ----------------------------------------------------------------------
 
@@ -60,6 +57,11 @@ shell.  Also, you can look at dependencies like this:
   sunpro           |          SUNWspro-4.2
                    |              cc-tools
  ------------------+-------------------------------------------------------
+
+
+** 1999-07-14 RELEASE 2.40
+
+- Doc tweaks. (cpan-testers: Don't bother, this is the same as 2.39.)
 
 
 ** 1999-07-14 RELEASE 2.39
