@@ -142,7 +142,8 @@ sub search_envy_path { #PRIVATE
 	closedir($dh);
     };
     
-    my @add = split /:+/, $o->{env}{&PATH};
+    my @add = split /:+/, $o->{env}{&PATH}||'';
+    @add = @DefaultPath if !@add;
     if (exists $o->{env}{'HOME'} and -d $o->{env}{'HOME'}."/.envy") {
 	unshift @add, $o->{env}{'HOME'}."/.envy";
     }
@@ -176,15 +177,6 @@ sub get_fullpath {
 # ---------------------------------------------------------------
 # TRANSACTIONS
 
-sub assure_default_path { #PRIVATE
-    my ($o) = @_;
-    my %def;
-    for (@DefaultPath) { $def{$_}=1 }
-    my @path = split /:+/, $o->{env}{&PATH} || '';
-    $o->{env}{&PATH} = join(':', @DefaultPath,
-			    grep { !exists $def{$_} } @path);
-}
-
 sub begin { #PUBLIC
     my ($o) = @_;
     return if $o->{transaction};
@@ -195,7 +187,6 @@ sub begin { #PUBLIC
     $o->{'warn'} = [];
     $o->{'log'} = [];
     $o->{errors} = 0;
-    $o->assure_default_path;
     my $v = $o->version;
     $o->w("Envy protocol $v is not supported in this version of Envy (v$VERSION).\nPlease consider upgrading to the latest version!\n")
 	if $v > $EVERSION;
@@ -493,7 +484,7 @@ sub assign {
     $k = $o->edit_key($k);
     return if !$k;
     return $o->e("Variable '$k' must be edited with +=")
-	if ($k eq 'PATH' or $k eq 'MANPATH' or $k eq &PATH);
+	if ($k eq 'PATH' or $k eq 'MANPATH');
     if (!$reverse) {
 	$o->n("Variable '$k' redefined") if
 	    (!$force and exists $o->{env}{$k});
@@ -502,15 +493,6 @@ sub assign {
     else {
 	delete $o->{env}{$k};
     }
-}
-
-sub without (\@\@) {  # make lexical XXX
-    my ($z, $e) = @_;
-    my %no;
-    for (@$e) { $no{$_}=undef }
-    my @r;
-    for (@$z) { push @r, $_ unless exists $no{$_} }
-    @r
 }
 
 sub rejoin {
@@ -525,20 +507,13 @@ sub rejoin {
     #             don't remove ourselves from the path?
     #             if switching to a new envy.pl abort subsequent loads?
     #
-    # ENVY_PATH - never remove components
-    #             rescan all directories for .env files?
+    # ENVY_PATH - rescan all directories for .env files
 
     # fetch old list
     my @old = split /$sep+/, $o->{env}{$k} if defined $o->{env}{$k};
     
     # fetch delta
     my @delta = split /$sep+/, $o->interpolate(0,$v);
-    
-    if ($k eq &PATH) { # strip DefaultPath
-	@old = without(@old, @DefaultPath);
-	@delta = without(@delta, @DefaultPath);
-    }
-
     my %delta; for (@delta) { $delta{$_}=1 }
     my @now;
 
@@ -574,7 +549,6 @@ sub rejoin {
 	}
 	push @now, @delta if !$prepend && !$reverse;
     }
-    unshift @now, @DefaultPath if $k eq &PATH;
     if (@now) {
 	$o->{env}{$k} = join $sep, @now;
     } else {
@@ -626,6 +600,7 @@ sub process_envy { #PRIVATE
 	close $fh;
     }
     my $seen_stuff=0;
+    my $is_first;
     my $prechange = sub {
 	return if $seen_stuff;
 	$seen_stuff = 1;
@@ -633,6 +608,7 @@ sub process_envy { #PRIVATE
 	    $o->w("Envy '$e' must claim dimension 'First' (don't be shy :-)");
 	    $swap = $o->nav_dimension($how, 'First', $e);
 	}
+	$is_first = $o->is_first($e);
     };
     my $doline = sub {
 	my $line = shift;
@@ -699,12 +675,24 @@ sub process_envy { #PRIVATE
 	elsif ($l =~ /^([\w-]+) (\+\=|\=\+) (.*)$/x) {
 	    my @got = ($1, $2 eq '+=', ':', $3);
 	    $prechange->();
+	    if ($got[0] eq &PATH) {
+		if ($is_first) {
+		    $o->w("In First, '".&PATH."' must be assigned with =")
+		}
+		if ($got[1]) {
+		    $o->w("Variable '".&PATH."' cannot be prepended")
+		}
+		$got[1] = 0;
+	    }
 	    $o->rejoin($how<0, @got)
 		if $mod;
 
 	} elsif ($l =~ /^([\w-]+) (:)?= (.*)$/x) {
 	    my @got = ($1,$2,$3);
 	    $prechange->();
+	    if (!$is_first and $got[0] eq &PATH) {
+		$o->w("Variable '".&PATH."' must be edited with +=")
+	    }
 	    $o->assign($how<0, @got)
 		if $mod;
 
@@ -720,6 +708,9 @@ sub process_envy { #PRIVATE
 	    last if $o->{errors} > 5;
 	}
 	if ($how) {
+	    if ($is_first and !$o->{env}{&PATH}) {
+		$o->w("You must set '".&PATH."'")
+	    }
 	    if ($swap and $swap != 1) {
 		$o->set_refcnt($e, $swap)
 	    } else {

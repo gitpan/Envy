@@ -62,6 +62,14 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1999-06-15 RELEASE 2.37
+
+- ENVY_PATH is now used only to find the First dimension.  Moreover,
+it is required that ENVY_PATH be re-assigned in First.  This should
+make it possible to switch between First dimensions correctly.  (Based
+on insightful feedback from Alexander.Shugayev@db.com!)
+
+
 ** 1999-06-09 RELEASE 2.36
 
 - Significant ergonomic improvements to wrapper. (Kudos to

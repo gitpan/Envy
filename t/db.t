@@ -27,7 +27,7 @@ sub envy {
 }
 
 envy(0, 'area1');
-ok @w, 0;
+ok @w, 0, join("\n",@w);
 ok $got{ETOP}, './example/area1';
 
 envy(0, 'openwin');
