@@ -60,19 +60,33 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
-** 1998-10-21 RELEASE 2.23
+** 1998-11-08 RELEASE 2.24 [BETA]
+
+- New short-cuts: 'unenvy' for quick unload and $ENVY_VERBOSE to set
+the default verbosity level.
+
+- Envy modules are now reference counted for more accurate dependency
+tracking.  (One of Tony's satoris!)  As a side effect, the symantics
+of ENVY_STATE have changed slightly (but it is still mostly backward
+compatibile).
+
+- Very long (>1000 characters) envy state variables are now split into
+easily digestable chunks.  Added tests.  (Thanks Tony!)
+
+- Implemented an optimal differencing algorithm to minimize
+environment changes.
+
+- Downgraded some errors to manditory warnings.
+
+- Significant Envy::DB API improvements.
+
+
+** 1998-10-21 RELEASE 2.23 [STABLE]
 
 - Descriptions are now displayed in 'envy list'. (Thanks Tony!)  Moved
 full-paths to 'envy show paths'.
 
 - Add -v option to wrapper.
-
-
-** 1998-09-26 RELEASE 2.22
-
-- Set $LOGNAME in wrapper if not already set.
-
-- Announce new mailing list: envy@listbox.com!
 
 
 see ./INSTALL for hints on installation

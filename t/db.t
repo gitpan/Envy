@@ -13,8 +13,16 @@ my $db = Envy::DB->new(\%ENV);
 ok 2;
 
 sub envy {
+    $db->begin;
     $db->envy(@_);
-    for ( $db->to_sync()) { $got{$_->[0]} = $_->[1] }
+    $db->commit;
+    for ( $db->to_sync()) {
+	if (defined $_->[1]) {
+	    $got{$_->[0]} = $_->[1]
+	} else {
+	    delete $got{$_->[0]};
+	}
+    }
     @w = $db->warnings(2);
 }
 
@@ -28,16 +36,18 @@ ok $got{OPENWINHOME}, '/usr/openwin';
 ok grep(/openwin/, split /:+/, $got{PATH}), 1;
 
 envy(0, 'openwin');
-ok @w, 0;
+ok @w, 0, join('',"GOT:\n",@w);
 ok grep(/openwin/, split /:+/, $got{PATH}), 1;
 
 envy(1, 'openwin');
 ok @w, 0;
-ok 0+grep(/openwin/, split /:+/, $got{PATH}), 0;
+ok 0+grep(/openwin/, split /:+/, $got{PATH}||''), 0;
 ok !$got{OPENWINHOME}, 1;
 
 envy(0, 'insure');
 ok @w, 0;
+
+#while (my($k,$v)=each %got) { warn "$k $v\n" }
 
 my @p = split(/:+/, $got{PATH});
 ok @p, 3;
@@ -46,7 +56,7 @@ ok $p[2], '/ccs/';
 
 envy(0, 'append');
 envy(0, 'append');
-ok @w, 0;
+ok @w, 0, join('',"GOT:\n",@w);
 @p = split /:+/, $got{PATH};
 ok @p, 4;
 ok $p[3], 'appended';

@@ -1,26 +1,26 @@
 =head1 WHERE DOES ENVY FIT IN?
 
-We are looking into how to sink up two seprate job sits, with common
-software, and other tools.  Envy struck us as a way to go, but we are
+We are looking into how to sync up two separate sits with common
+software and other tools.  Envy struck us as a way to go, but we are
 not sure of all the possable usages of the software.  Our objective is
-to have a way to maintain two separate job sites, and not spend alot
+to have a way to maintain two separate job sites, and not spend a lot
 of time checking paths, working tool directories, and so forth.  How
 does envy fit in?
 
 Envy is designed to centralize specification of environment variables.
 It also helps manage dependencies between versions.  It sounds like
-envy can fit your requirements.  Read on!
+envy might fit your requirements: read on!
 
 =head1 IS THERE ANY DOCUMENTATION ON THE FORMAT OF AN .ENV FILE?
 
-See 'envy help' and the example directory.
+It's all online: 'envy help'.  Also see the example directory.
 
 =head1 WHY IS IT IMPORTANT TO BE ABLE TO UNLOAD?
 
 You can always start a fresh shell, but it isn't very clean or
 intuitive.  Rather, I took the requirement to unload as a principle in
 guiding envy's design.  It is this requirement more than anything else
-that restricts the kind of operations that are supported.
+that restricts the kind of features that can be implemented.
 
 =head1 HOW CAN I DO CONDITIONAL REQUIRE?
 
@@ -95,7 +95,13 @@ echo
 
 Send email to envy@listbox.com.
 
-=head1 THANKS
+=head1 THANKS!
 
-A big thanks to Tony.Parent@symbios.com and Jerry.Hoffman@symbios.com
-for motivating this FAQ by asking many questions!
+The following people can made significant (and insignificant!)
+contributions to Envy.  Thanks!
+
+  Jerry.Hoffman@symbios.com
+  Tony.Parent@symbios.com
+  Sergei Poliakoff
+  Alexander Shugayev
+  Devina Kerr White

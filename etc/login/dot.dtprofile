@@ -129,4 +129,4 @@ export dtstart_sessionlogfile="/dev/console"
 #  If $HOME/.profile (.login) has been edited as described above, uncomment
 #  the following line.
 #
-DTSOURCEPROFILE=true
+# DTSOURCEPROFILE=true

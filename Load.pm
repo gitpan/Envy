@@ -11,6 +11,7 @@ sub import {
     for my $pkg (@imports) {
 	$db->envy(0, $pkg);
     }
+    $db->commit;
     for ($db->warnings(1)) { print STDERR $_; }
     $me->sync($db);
 }
@@ -39,6 +40,7 @@ sub load {
     for my $pkg (@_) {
 	$db->envy(0, $pkg);
     }
+    $db->commit;
     $e->sync($db);
     for ($db->warnings(1)) { print STDERR $_; }
 }

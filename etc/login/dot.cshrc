@@ -3,8 +3,11 @@
 
 if ($?ENVY_VERSION) then
 
+# probably can use backticks with source? XXX
+
 alias module 'envy.pl -csh \!* > /tmp/tmp.$$; source /tmp/tmp.$$; /bin/rm /tmp/tmp.$$; echo Type envy instead of module '
 alias envy 'envy.pl -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
+alias unenvy 'envy.pl -un -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
 
 set filec
 set history=500

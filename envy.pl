@@ -6,12 +6,14 @@ use Envy::DB qw(@DefaultPath);
 # If you want to reuse any of the code in this file, let me
 # know and I'll move it to Envy::UI or somesuch.  Thanks!
 
-my $warnlevel = 1;
+my $warnlevel = $ENV{ENVY_VERBOSE} || 1;
+my $is_unload=0;
 my $is_csh=0;
 my $is_showing=0;
 
 sub sync_env {
     my ($db) = @_;
+    $db->commit;
     for ($db->warnings($warnlevel)) { print }
     $db->write_log if !$is_showing;
     my $old = select STDOUT if !$is_showing;
@@ -49,9 +51,11 @@ sub GO() {
     while (@ARGV and $ARGV[0] =~ m/^\-/) {
 	my $arg = shift @ARGV;
 	if ($arg =~ m/^\-csh$/) { $is_csh=1 }
+	elsif ($arg =~ m/^\-un$/) { $is_unload=1 }
 	elsif ($arg =~ m/^-q(uiet)?$/) { $warnlevel = 0 }
-	elsif ($arg =~ m/^\-debug$/) { $warnlevel = 5 }
-	elsif ($arg =~ m/^-v(\d+)?/) { $warnlevel = length $1? $1 : 2; }
+	elsif ($arg =~ m/^\-debug$/)   { $warnlevel = 5 }
+	elsif ($arg =~ m/^-v$/)        { ++$warnlevel }
+	elsif ($arg =~ m/^-v(\d+)?/)   { $warnlevel = length $1? $1 : 2; }
 	else {
 	    warn "option '$arg' ignored\n"
 	}
@@ -62,7 +66,12 @@ sub GO() {
     select STDERR;    # STDOUT goes the shell eval
     
     if ($cmd eq 'show' and @ARGV >= 1 and $ARGV[0] eq 'paths') {
+	print "[Just use 'paths' instead of 'show paths'.]\n\n";
 	shift @ARGV;
+	$cmd = 'paths';
+    }
+
+    if ($cmd eq 'paths') {
 	# horrifying amount of code duplication GACK! XXX
 	$cmd = cmd_2re(shift @ARGV);
 	my ($mo, $ld) = $db->status();
@@ -81,24 +90,31 @@ sub GO() {
 	    print(($loaded{$m}? " x ":"   ").
 		  $m . ' 'x($NumSpaces-1) . " $desc\n");
 	}
-	print "\n** Type 'envy help' for usage information. **\n";
+	Huh();
     }
-    elsif ($cmd eq "load" or $cmd eq "reload" or $cmd eq "show") {
-	&HELP if @ARGV < 1;
-	$is_showing = $cmd eq 'show';
+    elsif ($cmd eq "load" or $cmd eq "reload") {
+	Huh("Unenvy load means what?")
+	    if $is_unload;
+	&Help if @ARGV < 1;
 	while (@ARGV) {
+	    $db->envy(1, shift @ARGV)
+		if $cmd eq 'reload';
 	    $db->envy(0, shift @ARGV);
 	}
 	sync_env($db);
 	
+    } elsif ($cmd eq "show") {
+	&Help if @ARGV < 1;
+	$is_showing = 1;
+	while (@ARGV) { $db->envy($is_unload, shift @ARGV); }
+	sync_env($db);
+	
     } elsif ($cmd eq "un" or $cmd eq "unload") {
+	Huh("Unenvy unload doesn't mean what?")
+	    if $is_unload;
 	my ($ign, $loaded) = $db->status();
-	push(@ARGV, 'all') if @ARGV == 0;
-	if (@ARGV == 1 and $ARGV[0] eq 'all') {
-	    $db->unload_all();
-	} else {
-	    while (@ARGV) { $db->envy(1, shift @ARGV); }
-	}
+	push @ARGV, $db->{first} if @ARGV == 0;
+	while (@ARGV) { $db->envy(1, shift @ARGV); }
 	sync_env($db);
 	
     } elsif ($cmd eq "list") {
@@ -124,10 +140,10 @@ sub GO() {
 	    print(($loaded{$m}? " x ":"   ").
 		  $m . ' 'x($NumSpaces-1) . " $desc\n");
 	}
-	print "\n** Type 'envy help' for usage information. **\n";
+	Huh();
 	
     } elsif ($cmd eq "help") {
-	&HELP(shift @ARGV);
+	&Help(shift @ARGV);
 	
     } else {
 	my ($mo, $ld) = $db->status();
@@ -150,7 +166,7 @@ sub GO() {
 	} elsif (@mo == 1) {
 	    my $mo = $mo[0];
 	    $db->check_fuzzy($mo);
-	    $db->envy(0, $mo);
+	    $db->envy($is_unload, $mo);
 	    sync_env($db);
 	    return;
 	}
@@ -172,28 +188,39 @@ sub GO() {
     }
 }
 
-sub HELP {
+sub Huh {
+    my ($why) = @_;
+    if ($why) {
+	print "** $why\n";
+    } else {
+	print "\n";
+    }
+    print "** Type 'envy help' for usage information. **\n";
+    exit;
+}
+
+sub Help {
     my $page = shift;
     if (!$page) {
 	print "
-  Envy $Envy::DB::VERSION -- Multi-Dimension Environment Manager
+  Envy $Envy::DB::VERSION -- Environment Dimension Manager
 
   Try:
 
      envy help usage    for command line arguments
-     envy help custom   for a description of \$HOME/.custom files
+     envy help custom   for a description of \$HOME/.custom/ files
      envy help author   for help writing .env files
      envy help path     for an explaination of search paths
      envy help env      for a list of envy specific environment variables
      envy help copy     for licensing information
 
-  Email envy\@listbox.com for support.  Thanks!
+  Send email to envy\@listbox.com for support.  Thanks!
 
 ";
     } elsif ($page eq 'usage') {
 	print "
    list [<envy>]                - See descriptions
-   show paths [<envy>]          - Location of source files
+   paths [<envy>]               - Location of source files
    load <envy> [<envy> ...]     - (Re)loads <envy> environments
    show <envy> [<envy> ...]     - Dumps action to stdout
    un <envy> [<envy> ...]       - Unloads <envy> environments
@@ -213,16 +240,18 @@ sub HELP {
 	# avoid silly warning
 	my $startup = $Envy::Conf::startup = $Envy::Conf::startup;
 	print '
-     $HOME/startup   - Your startup envy (default: '.$startup.')
-     $HOME/win.name  - Your window manager setup
+   The following files can be found in $HOME/.custom/...
+
+     startup     - Your startup envy (default: '.$startup.')
+     win.name    - Your window manager setup
 
    Bourne Shell:
-     $HOME/profile   - Sourced once upon login
-     $HOME/shrc      - Sourced for each new shell instance
+     profile     - Sourced once upon login
+     shrc        - Sourced for each new shell instance
 
    C-Shell:
-     $HOME/login     - Sourced once upon login
-     $HOME/cshrc     - Sourced for each new shell instance
+     login       - Sourced once upon login
+     cshrc       - Sourced for each new shell instance
 
 ';
 
@@ -253,7 +282,7 @@ sub HELP {
 	for (@DefaultPath) { $def{$_} = 1 }
 	@cur = map { sprintf("%-$ {w}s  %s", $_, $def{$_}? '#default':'') } @cur;
 	print "
-   Current search path:
+   Current search path (order is observed):
      ".join("\n     ", @cur)."
 
    All search paths also include the .priv directory (if found).
@@ -265,11 +294,12 @@ sub HELP {
     } elsif ($page eq 'env') {
 	print "
    \$ETOP           - Prefix for login scripts.
-   \$ENVY_PATH      - Colin separated search path.  Envys are typically
+   \$ENVY_PATH      - Colin separated search path.  Envies are typically
                      installed in \$ETOP/env/envy.  See 'envy help path' too.
    \$ENVY_STATE     - Keeps track of which modules are loaded & dependencies.
    \$ENVY_DIMENSION - Keeps track of dimensions.
    \$ENVY_VERSION   - Envy protocol version.
+   \$ENVY_VERBOSE   - Default verbosity level.
 
 ";
     } elsif ($page eq 'copy') {
@@ -280,6 +310,8 @@ sub HELP {
    or implied warranty.  It may be used, redistributed and/or modified
    under the terms of the Perl Artistic License (see
    http://www.perl.com/perl/misc/Artistic.html)
+
+   ('Envy' is not an acronym.  Pronounced: 'n-v')
 
 ];
     } else {

@@ -1,3 +1,10 @@
+** 1998-09-26 RELEASE 2.22
+
+- Set $LOGNAME in wrapper if not already set.
+
+- Announce new mailing list: envy@listbox.com!
+
+
 ** 1998-09-13 RELEASE 2.21
 
 - Documentation updates.

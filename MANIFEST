@@ -3,6 +3,7 @@ DB.IN
 DefaultConf.pm
 FAQ.pod
 INSTALL
+Import.pm
 Load.pm
 MANIFEST
 MANIFEST.SKIP
@@ -37,5 +38,7 @@ subst.pm
 t/config.t
 t/db.t
 t/load.t
+t/verylong.t
+t/warn.t
 test.IN
 wrapper.IN

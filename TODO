@@ -4,9 +4,9 @@ Envy::Util or Envy::UI
   - library of functions to assist in presentation
   - factor envy.pl & DB.IN
 
-switch to MAKEMAKEROPT
+switch to PERL_MM_OPT
 
-include package   # always reload; no dimensions
+include package   # always reload; no dimensions?
 
 factor fuzzy match
 
@@ -14,21 +14,18 @@ Maybe it is possible to read the $ENVY_PATH one component at a time?
 Seems yes..?  Potentially big performance win on slow file-systems
 (like mine! :-).
 
-short cuts:
-  unload by dimension!
-  unenvy : envy unload
+support for dimension migration (aliases)
 
-real lexical analysis - use XS?
+real lexical analysis -- use XS?
+
+explicit dependencies for refcnt>1?
 
 improve catalogue
 
-generate all shell scripts with perl templates
+machine generate shell script variants
   keeps sh/csh in sync
   less chance of bugs
   make compatible with rc/es!
-
-pipe long output through $ENV{PAGER}
-  can't fix envy.pl because shell will eval STDOUT!
 
 regression tests
   dimension swapping
@@ -41,25 +38,15 @@ comparison operations -
     or against two different
   diff similarly named env files - shadowed report
 
-in the 'envy list' and such, the marker is always 'x'
-instead, the marker should be dependent on where the file was loaded?
-
-Implement BSD make's "?=" variable assignment operator.  The variable
-is assigned the specified value only if that variable is not already
-defined.  Unload must be eager.  Does anyone want this?
-
-macro-ize?
-  unshift(VAR, ' ', COMPONENTS)
-  push(VAR, ' ', COMPONENTS)
-
 might be a way to avoid the need for ETOP in the login scripts?
+
+pipe long output through $ENV{PAGER}?
+  can't fix envy.pl because shell will eval STDOUT!
 
 umask 0;  # Figure out how to run setuid 'envy'?
 
-show loaded dimensions in PROMPT?
-
 documentation for:
-  First - the most important thing is to be free - agree on it!  :-)
+  First - the most important thing is to understand - agree on it!  :-)
   Envy::DB API
 
 ---------------------------------------- GRAPHICAL ENVY PROJECT ---------
@@ -140,3 +127,25 @@ can deal with that later.  Maybe try this:
 In essence, provide your own wrappers around all the default methods so
 you can fill in all the extra info.  Does this make sense?
 
+
+---------------------------------------------- PIE IN THE SKY ---------
+
+store ENVY_STATE, etc, as compressed binhex?!
+
+envy.pl
+  show loaded dimensions in PROMPT?
+&
+  in the 'envy list' the marker is always 'x'
+    make the marker dependent on where the file was loaded?
+
+script to test maximum number of characters per environment variable?
+
+macro-ize?
+  unshift(VAR, ' ', COMPONENTS)
+  push(VAR, ' ', COMPONENTS)
+
+Implement BSD make's "?=" variable assignment operator.  The variable
+is assigned the specified value only if that variable is not already
+defined.  Unload must be eager.  Does anyone want this?
+
+split/join of any very long variable?

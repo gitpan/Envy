@@ -38,9 +38,9 @@ print $dspace.('-'x(75-length $dspace))."\n";
 printf $fmt, 'DIMENSION', '', 'ENVIED';
 print $dspace.('-'x(75-length $dspace))."\n";
 
-for my $level (0,1,2) {
+for my $seniority (0..30) {  # should be dynamic XXX
     for my $m (@all) {
-	next if $loaded->{$m} ne $level;
+	next if $loaded->{$m} ne $seniority;
 	show($m, 0);
     }
 }
