@@ -1,6 +1,6 @@
 =head1 NAME
 
-Envy - A comprehensive, multi-dimensional environment manager
+Envy - A comprehensive multi-dimensional environment manager
 
 =head1 SYNOPSIS
 
@@ -10,8 +10,8 @@ Sorry!
 
 =head1 FIRST TIME USERS
 
-It is recommended that you install envy privately in your home
-directory before risking the disruption of thousands of grumpy
+It is recommended that you install envy in the privacy of your own
+home directory before risking the disruption of thousands of grumpy
 co-workers.  Before you proceed, print this documentation on paper so
 you can refer to it if something electronic goes amiss.
 
@@ -72,7 +72,7 @@ just renamed.  To see what has changed recently use:
 Simply undo the damage (rm the symlinks and copy your old dot files
 back) and you should be back to normal.
 
-=head2 WHY AM I GOING THROUGH THIS HELL?
+=head2 WHY AM I GOING THROUGH ALL THIS HELL?
 
 Because envy could solve some of your long standing problems!
 
@@ -151,7 +151,7 @@ For a comparison of unix shells:
 
   http://www.faqs.org/faqs/unix-faq/shell/shell-differences/index.html
 
-And for why you shouldn't do shell programming in csh:
+And for why you should NOT do shell programming in csh:
 
   http://www.faqs.org/faqs/unix-faq/shell/csh-whynot/
 

@@ -51,27 +51,26 @@ shell.  Also, you can look at dependencies like this:
                    |      printing
   p4               |      qsg-p4
   3boink           |  3boink-prod
-  objstore         |      objstore
-  objstore-release |          objstore-5.1
+                   |      objstore
+  objstore         |          objstore-5.1
                    |      qsg-build10
                    |      sunpro
-                   |          SUNWspro-4.2
+  sunpro           |          SUNWspro-4.2
                    |              cc-tools
  ------------------+-------------------------------------------------------
 
 
-** 1998-12-10 RELEASE 2.27 [STABLE]
+** 1999-02-04 RELEASE 2.29 [STABLE]
 
-- Fixed $db->all_matching (list & paths were broken?).
+- ENVY_PATH is no longer reset when unloading.  (Kudos to Sasha! :-)
+Added regression test.
 
-- Tweak 'envy show' to ignore the current environment a bit better.
+- Doc tweaks.
 
 
-** 1998-11-24 RELEASE 2.26 [STABLE]
+** 1998-12-31 RELEASE 2.28 [STABLE]
 
-- Factored out parts of envy.pl to Envy::UI library.
-
-- Tweaks for smoother dimension swapping.
+- Fixed 'envy reload'.
 
 
 see ./INSTALL for hints on installation
@@ -86,7 +85,7 @@ If you'd like to subscribe to this mailing list, send email to
 majordomo@listbox.com.  Thanks!
 
 -------------------------------------------------------------------
-Copyright © 1997-1998 Joshua Nathaniel Pritikin.  All rights reserved.
+Copyright © 1997-1999 Joshua Nathaniel Pritikin.  All rights reserved.
 
 This package is free software and is provided "as is" without express
 or implied warranty.  It may be used, redistributed and/or modified

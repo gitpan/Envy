@@ -52,7 +52,7 @@ sub GO() {
 	elsif ($arg =~ m/^-q(uiet)?$/) { $warnlevel = 0 }
 	elsif ($arg =~ m/^\-debug$/)   { $warnlevel = 5 }
 	elsif ($arg =~ m/^-v$/)        { ++$warnlevel }
-	elsif ($arg =~ m/^-v(\d+)?/)   { $warnlevel = length $1? $1 : 2; }
+	elsif ($arg =~ m/^-v(\d*)/)    { $warnlevel = length $1? $1 : 2; }
 	else {
 	    warn "option '$arg' ignored\n"
 	}
@@ -87,10 +87,12 @@ sub GO() {
 	Huh("Unenvy load means what?")
 	    if $is_unload;
 	&Help if @ARGV < 1;
+	my ($loaded, $dim) = $db->quick_status;
 	while (@ARGV) {
-	    $db->envy(1, shift @ARGV)
-		if $cmd eq 'reload';
-	    $db->envy(0, shift @ARGV);
+	    my $e = shift @ARGV;
+	    $db->envy(1, $e)
+		if ($cmd eq 'reload' and $loaded->{$e});
+	    $db->envy(0, $e);
 	}
 	sync_env($db);
 	
@@ -237,7 +239,7 @@ sub Help {
     } elsif ($page eq 'author') {
 	print "
    require Envy 2.16
-   dimension java-version            # Declares dimension membership
+   dimension java                    # Declares dimension membership
    echo Java is really neat.  I like it.
    alpha                             # Notify is alpha software
    beta                              # Notify is beta software
@@ -283,7 +285,7 @@ sub Help {
 ";
     } elsif ($page eq 'copy' or $page eq 'license') {
 	print q[
-   Copyright © 1997-1998 Joshua Nathaniel Pritikin.  All rights reserved.
+   Copyright © 1997-1999 Joshua Nathaniel Pritikin.  All rights reserved.
 
    This package is free software and is provided "as is" without express
    or implied warranty.  It may be used, redistributed and/or modified

@@ -1,9 +1,11 @@
 ** TODO
 
+option not to install dot profile/login
+
 Read the $ENVY_PATH one component at a time!  Big performance win on
 slow file-systems (like mine! :-)
 
-switch to PERL_MM_OPT
+switch perl PERL5PREFIX to PERL_MM_OPT
 
 explicit dependencies for refcnt>1
 

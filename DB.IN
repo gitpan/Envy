@@ -531,6 +531,8 @@ sub rejoin {
 	    push @now, @delta if $prepend;
 	    for my $p (@old) { push @now, $p if !exists $delta{$p} }
 	    push @now, @delta if !$prepend;
+	} else {
+	    @now = @old;  #never remove components
 	}
     }
     elsif ($k eq 'PATH') {
