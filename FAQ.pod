@@ -97,8 +97,8 @@ Send email to envy@listbox.com.
 
 =head1 THANKS!
 
-The following people can made significant (and insignificant!)
-contributions to Envy.  Thanks!
+The following people made significant (and insignificant!)
+contributions to Envy.  May your hair never turn purple!  (Thanks!)
 
   Jerry.Hoffman@symbios.com
   Tony.Parent@symbios.com

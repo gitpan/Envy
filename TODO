@@ -1,28 +1,26 @@
 ** TODO
 
 Envy::Util or Envy::UI
-  - library of functions to assist in presentation
-  - factor envy.pl & DB.IN
+  library of functions to assist in presentation
+  factor envy.IN & DB.IN
+  fuzzy match
+
+Read the $ENVY_PATH one component at a time!  Big performance win on
+slow file-systems (like mine! :-)
 
 switch to PERL_MM_OPT
 
+explicit dependencies for refcnt>1
+
 include package   # always reload; no dimensions?
-
-factor fuzzy match
-
-Maybe it is possible to read the $ENVY_PATH one component at a time?
-Seems yes..?  Potentially big performance win on slow file-systems
-(like mine! :-).
 
 support for dimension migration (aliases)
 
 real lexical analysis -- use XS?
 
-explicit dependencies for refcnt>1?
-
 improve catalogue
 
-machine generate shell script variants
+machine generate shell script variants (see Rc)
   keeps sh/csh in sync
   less chance of bugs
   make compatible with rc/es!
@@ -84,51 +82,7 @@ Gack!  Your right!  What a mess!  :-)
 > In order to show the correct b_<site>.env module I'll have to fully load "a"
 > first. 
  
-That should be interesting.  Definitely, think about caching the results
-somehow.  Maybe use Storable?
- 
-> Now on to the tree traversal stuff...
-> 
-> 1) Create another level of abstraction Envy::DB::Node or Envy::DBNode
- 
-Right.  That's what I was thinking.  Perhaps 'Envy::Node'.  Shorter is
-better.
-
-In perl that should boil down to:
- 
-  { up => [], down => [], dimen => 'compiler', fullpath => '?' }
- 
-> (Children needs to be an array as one module can require multiple sub
-> modules. Parents needs to be an array because on module can be required by
-> many differant modules.)
- 
-Right.  You are doing the GUI, so good luck!
- 
-> This one may entail more rewrite of the rest of the code for consistancy
-> then I want (or need) to do.
- 
-I don't think so.  I specifically thought about this when I rewrote it
-last week.  Most of the operations envy executes don't need the full tree.  
-Maybe you should put all your code under Envy::BigDB and make the minimum
-changes to Envy::DB.
- 
-> 2) Store the data in DB:: vars and use functions to access the data. Here
-> the above functions would look like:
- 
-There is some overlap between the two databases.  But not very much and we
-can deal with that later.  Maybe try this:
- 
-  package Envy::BigDB;
-  @ISA = 'Envy::DB';
- 
-  sub nav_dimension { ... }
-  sub process_envy { ... }
- 
-In essence, provide your own wrappers around all the default methods so
-you can fill in all the extra info.  Does this make sense?
-
-
----------------------------------------------- PIE IN THE SKY ---------
+---------------------------------------------- PIE IN THE SKY! ---
 
 store ENVY_STATE, etc, as compressed binhex?!
 

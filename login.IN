@@ -9,17 +9,13 @@ if (! $?HOME) then
     echo "PANIC: HOME is not set"; exit
 endif
 
-if (-s $HOME/.custom/startup.name) then
-    set startup = `cat $HOME/.custom/startup.name`
-endif
-if (-s $HOME/.custom/startup) then
-    set startup = `cat $HOME/.custom/startup`
-endif
-if (! $#startup) set startup = "#STARTUP#"
+test -s $HOME/.custom/startup.name && set startup = `cat $HOME/.custom/startup.name`
+test -s $HOME/.custom/startup && set startup = `cat $HOME/.custom/startup`
+if (! $?startup) set startup = "#STARTUP#"
 
 set ENVY_CONTEXT=STARTUP
 set ENVY=#ENVY.PL#
-test -x $ENVY || echo Envy not found at $ENVY: PANIC
+test -x $ENVY || echo Envy not found at ${ENVY}: PANIC
 
 $ENVY -csh $startup > /tmp/mod.$$
 source /tmp/mod.$$

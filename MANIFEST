@@ -11,8 +11,9 @@ Makefile.PL
 README
 TODO
 UPGRADE
+VERSION
 envied
-envy.pl
+envy.IN
 etc/login/bash.inputrc
 etc/login/dot.cshrc
 etc/login/dot.dtprofile

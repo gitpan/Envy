@@ -37,6 +37,7 @@ BEGIN {
 	$Old=1;
     }
     require "./subst.pm";
+    require "./VERSION";
 }
 use File::Compare;
 use IO::File;
@@ -92,6 +93,7 @@ my $subst = {'#SEARCH#' => "qw(".join(' ',@{$How{path}}).")",
 	     '#ETOP#' => $How{prefix},
 	     '#PERL5LIB#' => $perl5lib,
 	     '#WHOAMI#' => $How{whoami},
+	     '#VERSION#' => $VERSION,
 	    };
 
 sub go {

@@ -1,5 +1,6 @@
-# ghostwheel dimension multiplexer; -*-perl-*-
-# ---------------------------------------------------------------
+# ------------------------------------------------------*-perl-*-
+# GHOSTWHEEL DIMENSION MULTIPLEXER
+#
 # use 5.005;  ???
 use strict;
 package Envy::DB;
@@ -12,7 +13,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $LOGIN $Context $Loop $Path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(@DefaultPath);
-$VERSION = '2.24';
+$VERSION = '#VERSION#';
 
 umask 0;  # Figure out how to run setuid 'envy'? XXX
 
@@ -591,7 +592,7 @@ sub process_envy { #PRIVATE
     local $Path = $o->get_fullpath($e);
     return $o->w("Can't find envy '$e' (skipping)")
 	if !$Path;
-    $o->w("Envy '$e' re-unloaded")
+    return $o->w("Envy '$e' re-unloaded")
 	if $how<0 && $o->get_refcnt($e)==0;
 
     my $swap;
@@ -635,6 +636,9 @@ sub process_envy { #PRIVATE
 		$o->$m($o->interpolate(1,$l)."\n")
 	    }
 	} elsif ($l =~ s/^desc(ription)?\s+//) {
+	    # need to reset before reading file XXX
+	    # will be backwards for unload XXX
+	    # just ignore here? XXX
 	    my $d = $o->{desc};
 	    if (!$d->{$e}) {
 		$d->{$e} = $l;

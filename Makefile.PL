@@ -20,6 +20,7 @@ if (-d "./blib") {
   system "rm -rf ./blib";
 }
 
+# set up example .env areas
 unlink "./example/area1/etc/envy/area2.env";
 symlink "../../../../example/area2/etc/envy/area2.env",
     "./example/area1/etc/envy/area2.env" or warn $!;
@@ -43,10 +44,10 @@ WriteMakefile(@prefix,
 	      NAME => 'Envy',
 	      PREREQ_PM => { Test => 1 },
 	      EXE_FILES => [qw(envy.pl wrapper envied)],
-	      MAN1PODS => {}, # MANPATH might be unset!
+	      MAN1PODS => {}, # MANPATH might be unset! :-)
 	      MAN3PODS => {},
-	      PL_FILES => {'set_defaults.PL' => join(' ', values %$subst_files) },
-	      VERSION_FROM => 'DB.IN',
+	      PL_FILES => {'set_defaults.PL' => join(' ',values %$subst_files) },
+	      VERSION_FROM => './VERSION',
 	      PM => {
 		     'Conf.pm' => '$(INST_LIBDIR)/Envy/Conf.pm',
 		     'DefaultConf.pm' => '$(INST_LIBDIR)/Envy/DefaultConf.pm',

@@ -1,7 +1,11 @@
 #!/nw/dist/prod/bin/perl -w
 use strict;
-use vars qw($running_under_some_shell);
+use vars qw($VERSION $running_under_some_shell);
+$VERSION = '#VERSION#';
 use Envy::DB qw(@DefaultPath);
+
+warn "[WARNING: Envy version mismatch -- Envy::DB $Envy::DB::VERSION ne $VERSION]\n\n"
+    if $Envy::DB::VERSION ne $VERSION;
 
 # If you want to reuse any of the code in this file, let me
 # know and I'll move it to Envy::UI or somesuch.  Thanks!
@@ -212,7 +216,7 @@ sub Help {
      envy help author   for help writing .env files
      envy help path     for an explaination of search paths
      envy help env      for a list of envy specific environment variables
-     envy help copy     for licensing information
+     envy help license  for licensing information
 
   Send email to envy\@listbox.com for support.  Thanks!
 
@@ -302,7 +306,7 @@ sub Help {
    \$ENVY_VERBOSE   - Default verbosity level.
 
 ";
-    } elsif ($page eq 'copy') {
+    } elsif ($page eq 'copy' or $page eq 'license') {
 	print q[
    Copyright © 1997-1998 Joshua Nathaniel Pritikin.  All rights reserved.
 
