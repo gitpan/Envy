@@ -93,6 +93,7 @@ my $subst = {
 	     '#PERL5LIB#' => $perl5lib,
 	     '#SAFE_SYMLINK#' => $symlink_str,
 	     '#SEARCH#' => "qw(".join(' ',@{$How{path}}).")",
+	     '#SHSEARCH#' => join(':',@{$How{path}}),
 	     '#STARTUP#' => $How{startup},
 	     '#STRICTNESS#' => $How{strictness},
 	     '#VERSION#' => $VERSION,
@@ -121,11 +122,11 @@ $prefix = ]."'$How{prefix}';".q[
 %env0 = (
 ].join('',map { "\t'$_' => '$$env0{$_}',\n" } sort keys %$env0) .q[);
 
-# Where to find the First dimension
+# the directory containing the First dimension
 @path = qw(
 ].join('', map { "\t$_\n" } @{$How{path}}).q[);
 
-# First dimension
+# the .env file containing the First dimension
 $startup = ]."'$How{startup}';".q[
 
 # Strictness (0 is normal; 1 upgrades warnings to errors)

@@ -59,13 +59,17 @@ if [[ $la_cron -ne 0 ]]; then
   HOME=$la_HOME;        export HOME
   SHELL=/bin/sh;        export SHELL
   unset la_LOGNAME la_HOME
+else
+  # overlay
+  ENVY_PATH=#SHSEARCH#
+  ENVY_STATE=
+  ENVY_DIMENSION=
+fi
 
-  if [[ $la_loadstartup -ne 0 ]]; then
-    echo "launche: $la_startup is already loaded automatically (ignored)"
-    la_loadstartup=1
-  else
-    la_toload="$la_startup $la_toload"
-  fi
+if [[ $la_loadstartup -ne 0 ]]; then
+  echo "launche: $la_startup is already loaded automatically (ignored)"
+else
+  la_toload="$la_startup $la_toload"
 fi
 
 # Is it unlikely that LOGNAME or HOME will be unprepared, however,
