@@ -1,5 +1,7 @@
 #-*-perl-*-
 
+require 5.005; # probably?
+
 use ExtUtils::MakeMaker;
 
 warn "

@@ -1,80 +1,102 @@
 #!/bin/ksh
-USAGE='usage: [-v] [-e envy1 envy2 ...] [-s <shell cmd> ...]'
 
-if [ x$ENVY_VERSION != x ]; then
+wrapper_usage() {
+  echo 'usage: wrapper [-v] [-e envy1 envy2 ...] -s <shell cmd>'
   echo
-  echo '*** ERROR: Envy is already running!'
-  echo
-  echo 'To test, please use this idiom:'
-  echo "  'env -i $0 ...'"
-  echo
+  echo  "  By default, wrapper clears all environment variables in order"
+  echo  "  to function exactly as if it was invoked by cron.  If you wish"
+  echo  "  to disable this behavior, use:"
+  echo  "    wrapper --preserve_environment ..."
   exit
+}
+
+if [[ $# = 0 ]]; then wrapper_usage; fi
+
+typeset -i i
+wr_i=0
+wr_preserve=0
+wr_verbose=0
+wr_toload=#STARTUP#
+
+while [[ $1 = -* ]]; do
+  case $1 in
+
+  --preserve_environment) wr_preserve=1 ;;
+
+  -s|--) while [[ $2 != -* && $# > 1 ]];
+      do 
+	wr_commands[$wr_i]=${wr_commands[$wr_i]}" "$2
+	shift
+      done
+      if [[ x$i = x1 ]]; then
+        echo "wrapper: please specify only one shell command"
+      fi
+      wr_i=$wr_i+1
+      ;;
+
+  -m|-e) while [[ $2 != -* && $# > 1 ]];
+      do 
+	if [ "$2" != #STARTUP# ]; then
+	    wr_toload="$wr_toload $2"
+	fi
+	shift
+      done
+      ;;
+
+  -v) wr_verbose=1 ;;
+
+  *)  echo "wrapper: unknown option '$1' ignored"
+      break
+  esac
+
+  if [[ $# > 0 ]];  then
+    shift
+  fi
+done
+
+if [[ $wr_i = 0 ]]; then wrapper_usage; fi
+
+if test $wr_preserve = 0 -a x$ENVY_VERSION != x; then
+  # Envy is already running.  We need to clear the environment!
+  if [ $wr_verbose -eq 1 ]; then
+    echo "wrapper: cleansing the environment"
+  fi
+  wr_LOGNAME=$LOGNAME
+  wr_HOME=$HOME
+  eval `/bin/env | /bin/sed -e 's/^\([^=]*\)\=.*$/unset \1;/g'`
+  LOGNAME=$wr_LOGNAME;  export LOGNAME
+  HOME=$wr_HOME;        export HOME
 fi
 
 #INITIAL_ENV#
 
+SHELL=/bin/sh; export SHELL
+
+# Is it unlikely that LOGNAME or HOME will not be prepared, however,
+# better safe than sorry.
 if [ x$LOGNAME == x  ]; then
-  # cron sets up LOGNAME automatically but 'env -i' does not.
-  # Here we try to set it to something reasonable:
   LOGNAME=`#WHOAMI#`; export LOGNAME
-  # Probably need this too?
+fi
+if [ x$HOME == x ]; then
   HOME=/home/$LOGNAME; export HOME
 fi
 
-typeset -i i
-typeset -i j
-if [[ $# = 0 ]]; then
-    echo $USAGE
-    break
-fi
-  
-ENVY=`dirname $0`/envy.pl
-test -x $ENVY || echo Envy not found at $ENVY: PANIC
-
-v=0
-toload=#STARTUP#
-
-while [[ $1 = -* ]];
-do
-case $1 in
-
--s) while [[ $2 != -* && $# > 1 ]];
-    do 
-	commands[$i]=${commands[$i]}" "$2
-	shift
-    done
-    i=$i+1;;
-
--m|-e) while [[ $2 != -* && $# > 1 ]];
-    do 
-	if [ "$2" != #STARTUP# ]; then
-	    toload="$toload $2"
-	fi
-	shift
-    done;;
-
--v) v=1;;
-
-*)  echo "UNKNOWN OPTION -"$1 
-    echo $USAGE
-    break
-esac
-
-if [[ $# > 0 ]];  then
-    shift
-fi
-done
-
-ENVY_CONTEXT=${commands[0]}
+ENVY_CONTEXT=${wr_commands[0]}
 export ENVY_CONTEXT
-eval `$ENVY load $toload`
-if [ $v -eq 1 ]; then echo 'eval `'"$ENVY load $toload"'`'; fi
 
-j=$i
-i=0
-while [[ $i < $j ]];
+wr_dirname=`dirname $0`
+wr_envy=$wr_dirname/envy.pl
+test -x $wr_envy || echo "wrapper: 'envy' not found at $wr_envy: PANIC"
+
+eval `$wr_envy load $wr_toload`
+if [ $wr_verbose -eq 1 ]; then echo 'wrapper: eval `'"$wr_envy load $wr_toload"'`'; fi
+
+typeset -i j
+wr_j=$wr_i
+wr_i=0
+while [[ $wr_i < $wr_j ]];
 do
-    if [ $v -eq 1 ]; then echo ${commands[$i]}; fi
-    ${commands[$i]} 
-    i=$i+1
+    if [ $wr_verbose -eq 1 ]; then echo "wrapper: ${wr_commands[$wr_i]}"; fi
+    ${wr_commands[$wr_i]} 
+    wr_i=$wr_i+1
 done

@@ -150,7 +150,7 @@ sub search_envy_path { #PRIVATE
 	$add_path->($o, $p);
 	if (-d "$p/.priv") {
 	    $add_path->($o, "$p/.priv")
-	} elsif (-d "$p/.private") {
+	} elsif (-d "$p/.private") { # remove deprecated XXX
 	    $o->w("$p/.private should be renamed to $p/.priv\n");
 	    $add_path->($o, "$p/.private");
 	}
@@ -176,6 +176,15 @@ sub get_fullpath {
 # ---------------------------------------------------------------
 # TRANSACTIONS
 
+sub assure_default_path { #PRIVATE
+    my ($o) = @_;
+    my %def;
+    for (@DefaultPath) { $def{$_}=1 }
+    my @path = split /:+/, $o->{env}{&PATH} || '';
+    $o->{env}{&PATH} = join(':', @DefaultPath,
+			    grep { !exists $def{$_} } @path);
+}
+
 sub begin { #PUBLIC
     my ($o) = @_;
     return if $o->{transaction};
@@ -186,20 +195,7 @@ sub begin { #PUBLIC
     $o->{'warn'} = [];
     $o->{'log'} = [];
     $o->{errors} = 0;
-    do {
-	# MAKE SURE WE HAVE AT LEAST THE DEFAULT ENVY_PATH
-	my $fixed=0;
-	my %old;
-	my @path = split /:+/, $o->{env}{&PATH} || '';
-	for (@path) { $old{$_} = 1 }
-	for my $dir (@DefaultPath) {
-	    next if exists $old{$dir};
-	    push @path, $dir;
-	    $fixed=1;
-	}
-	$o->{env}{&PATH} = join ':', @path
-	    if $fixed;
-    };
+    $o->assure_default_path;
     my $v = $o->version;
     $o->w("Envy protocol $v is not supported in this version of Envy (v$VERSION).\nPlease consider upgrading to the latest version!\n")
 	if $v > $EVERSION;
@@ -331,7 +327,8 @@ sub nav_dimension { #PRIVATE
 	else {
 	    if ($di eq 'First') {
 		if ($by eq $o->{first}) {
-		    $o->n("First dimension '$by' reloaded"); #is harmless?
+		    $o->n("First dimension '$by' reloaded") #is harmless?
+			if !$o->{unload_all};
 		} else {
 		    $o->unload_all()
 		}
@@ -439,13 +436,14 @@ sub interpolate {
     my $subst = sub {
 	my $var = shift;
 	$var =~ tr [{}] []d;
+	# removed deprecated XXX
 	if ($var eq 'MODULE_BASE' or $var eq 'modulebase' or
 	    $var eq 'ENVY_LINKBASE') {
-	    $o->w("$var is depreciated")
+	    $o->w("$var is deprecated")
 		if $var =~ /module/i;
 	    return tree_top($Path);
 	} elsif ($var eq 'MODULE_REALBASE' or $var eq 'ENVY_BASE') {
-	    $o->w("$var is depreciated")
+	    $o->w("$var is deprecated")
 		if $var =~ /module/i;
 	    my $rbase = $Path;
 	    while (-l $rbase) {
@@ -479,7 +477,7 @@ sub interpolate {
 sub edit_key {
     my ($o, $k) = @_;
     if ($k eq 'MODULE_PATH') {
-	$o->w("'$k' is depreciated; please use ".&PATH);
+	$o->w("'$k' is deprecated; please use ".&PATH);
 	$k = &PATH;
     }
     return $o->w("Variable '$k' is not alpha-numeric") if
@@ -506,6 +504,15 @@ sub assign {
     }
 }
 
+sub without (\@\@) {  # make lexical XXX
+    my ($z, $e) = @_;
+    my %no;
+    for (@$e) { $no{$_}=undef }
+    my @r;
+    for (@$z) { push @r, $_ unless exists $no{$_} }
+    @r
+}
+
 sub rejoin {
     my ($o, $reverse, $k, $prepend, $sep, $v) = @_;
     $k = $o->edit_key($k);
@@ -523,24 +530,21 @@ sub rejoin {
 
     # fetch old list
     my @old = split /$sep+/, $o->{env}{$k} if defined $o->{env}{$k};
-    my %old; for (@old) { $old{$_}=1; }
     
     # fetch delta
     my @delta = split /$sep+/, $o->interpolate(0,$v);
-    my %delta; for (@delta) { $delta{$_}=1 }
     
-    # filter @old with @delta -> @now
-    my @now;
-    if ($k eq &PATH) {
-	if (!$reverse) {
-	    push @now, @delta if $prepend;
-	    for my $p (@old) { push @now, $p if !exists $delta{$p} }
-	    push @now, @delta if !$prepend;
-	} else {
-	    @now = @old;  #never remove components
-	}
+    if ($k eq &PATH) { # strip DefaultPath
+	@old = without(@old, @DefaultPath);
+	@delta = without(@delta, @DefaultPath);
     }
-    elsif ($k eq 'PATH') {
+
+    my %delta; for (@delta) { $delta{$_}=1 }
+    my @now;
+
+    # filter @old with @delta -> @now
+    if ($k eq 'PATH') {
+	my %old; for (@old) { $old{$_}=1; }
 	my $has_dot = exists $old{'.'};
 	my %ign; for ('.', @FORCEPATH) { $ign{$_}=1 }
 
@@ -558,8 +562,7 @@ sub rejoin {
 	push @now, @delta if !$prepend && !$reverse;
 	unshift @now, @FORCEPATH;
 	unshift @now, '.' if $has_dot; # once sloppy always sloppy
-    }
-    else {
+    } else {
 	push @now, @delta if $prepend && !$reverse;
 	for my $p (@old) {
 	    if (!$reverse and exists $delta{$p}) {
@@ -571,13 +574,13 @@ sub rejoin {
 	}
 	push @now, @delta if !$prepend && !$reverse;
     }
-
+    unshift @now, @DefaultPath if $k eq &PATH;
     if (@now) {
 	$o->{env}{$k} = join $sep, @now;
     } else {
 	delete $o->{env}{$k};
     }
-    $o->search_envy_path() if $k eq &PATH;
+    $o->search_envy_path if $k eq &PATH;
 }
 
 # ---------------------------------------------------------------
@@ -605,8 +608,11 @@ sub process_envy { #PRIVATE
     local $Path = $o->get_fullpath($e);
     return $o->w("Can't find envy '$e' (skipping)")
 	if !$Path;
-    return $o->n("Envy '$e' re-unloaded")
-	if $how<0 && $o->get_refcnt($e)==0;
+    if ($how<0 and $o->get_refcnt($e)==0) {
+	$o->n("Envy '$e' re-unloaded")
+	    if !$o->{unload_all};
+	return;
+    }
 
     my $swap;
     my $mod = !(abs($how)<=1 and ($how>=0 xor $o->get_refcnt($e)==0));
@@ -640,7 +646,7 @@ sub process_envy { #PRIVATE
 	local $Context = (" at ".($how>=0?'':'un').
 			  "envy '$e' line $line\n\t".$Context);
 
-	if ($l =~ /^(alpha|beta|depreciated)$/) {
+	if ($l =~ /^(alpha|beta|deprecated)$/) {
 	    $o->w("Envy '$e' is ".uc($1).", use at your own risk")
 		if $mod && $how>=0;
 	} elsif ($l =~ s/^(echo|error)\s?//) {
@@ -669,6 +675,8 @@ sub process_envy { #PRIVATE
 		if $seen_stuff && $how>=0;
 	    return $o->w("Bad dimension name '$l' (ignored)")
 		if $l !~ m/^[\w-]+$/;
+	    $o->n("Dimension '$l' should not mention '$1'")
+		if $l =~ m/(release)/ or $l =~ m/(version)/;
 	    $swap = $o->nav_dimension($how, $l, $e);
 
 	} elsif ($l =~ s/^require\s+//) {
@@ -765,8 +773,10 @@ sub unload_all { #PUBLIC
 	$o->process_envy(-100, $e, '1') if !$o->is_first($e);
     }
     # make sure we didn't shoot ourself in the foot
+    $o->{unload_all}=1;
     $o->process_envy(-1, $o->{first}, '1');
     $o->process_envy(1, $o->{first}, '1');
+    $o->{unload_all}=0;
 }
 
 # ---------------------------------------------------------------

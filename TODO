@@ -1,9 +1,5 @@
 ** TODO
 
-wrapper snarfs flags beyond -s; this can mess things up
-
-unload all should try to unload First kids twice
-
 Read the $ENVY_PATH one component at a time!  Big performance win on
 slow file-systems (like mine! :-)
 

@@ -1,6 +1,6 @@
 # envy -*-perl-*-
 use strict;
-use Test; plan test => 3;
+use Test; plan test => 5;
 %ENV = (REGRESSION_ENVY_PATH => "./example/area1/etc/envy");
 require Envy::DB;
 
@@ -25,10 +25,16 @@ sub envy {
 envy(0, 'area1');
 my @P = split(/:+/, $got{ENVY_PATH});
 ok @P, 1;
+my $always = $P[0];
 
 envy(0, 'pathtest');
-my $save = $got{ENVY_PATH};
+@P = split(/:+/, $got{ENVY_PATH});
+ok @P, 2;
+ok $P[0], $always;
 
 envy(1, 'pathtest');
-ok $got{ENVY_PATH}, $save;
-ok $save, '/somewhere/';
+@P = split(/:+/, $got{ENVY_PATH});
+ok @P, 1;
+ok $P[0], $always;
+
+

@@ -3,12 +3,13 @@ Sick of an endlessly growing PATH?  Me too!
 Envy does shell-independent environment variable management.
 
 
-Envy tries to avoid beign ambitious.  It is designed as a narrow tool
-to solve specific and practical problems without going wildly
+Envy tries to avoid being ambitious.  It is designed as a narrow tool
+to solve a specific and practical problem without going wildly
 overboard.  Its modest scope includes:
 
-1. Easy, safe upgrade from any other dot-file setup.  Works with sh,
-ksh, bash, zsh, csh, and tcsh.  Support for rc & es are planned.
+1. Easy, safe conversion from any other dot-file setup.  Works with
+sh, ksh, bash, zsh, csh, and tcsh.  Support for rc & es would not be
+difficult.
 
 2. A mechanism is provided for setting and prepending environment
 variables in a variety of flexible ways.  All modifications are
@@ -18,6 +19,7 @@ reversible.  I think reversibility is important.
 crontab wrappers.
 
 Available at http://www.perl.com/CPAN/authors/id/JPRIT/ !
+  (requires perl 5.005)
 
 ----------------------------------------------------------------------
 
@@ -60,26 +62,28 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1999-06-09 RELEASE 2.36
+
+- Significant ergonomic improvements to wrapper. (Kudos to
+Alexander.Shugayev@db.com & Vicky.Nayer@db.com)
+
+- Assure order of ENVY_PATH when switching between environments.
+
+- Warnings for stupid dimension names.
+
+- Quell warnings emitted by unload all.
+
+- s/depreciated/deprecated/g
+
+- Versions 2.34 & 2.35 were for prerelease testing.
+
+
 ** 1999-05-13 RELEASE 2.33 [STABLE]
 
 - Change default $PATH to /bin:/usr/bin (suggested by
 binkley@bigfoot.com),
 
 - New FAQ entry: how to manage perl releases with envy.
-
-
-** 1999-05-07 RELEASE 2.32 [STABLE]
-
-- Change default $PATH to /bin.
-
-
-** 1999-05-06 RELEASE 2.31 [STABLE]
-
-- Keep the first components of $PATH set to Conf.pm $env0{PATH}
-(suggested by Chris Fumai).  This closes the door on malicious
-binaries (named 'ls' for example).
-
-- Repaired 'envy unload all'.
 
 
 see ./INSTALL for hints on installation

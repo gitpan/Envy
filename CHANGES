@@ -1,3 +1,17 @@
+** 1999-05-07 RELEASE 2.32 [STABLE]
+
+- Change default $PATH to /bin.
+
+
+** 1999-05-06 RELEASE 2.31 [STABLE]
+
+- Keep the first components of $PATH set to Conf.pm $env0{PATH}
+(suggested by Chris Fumai).  This closes the door on malicious
+binaries (named 'ls' for example).
+
+- Repaired 'envy unload all'.
+
+
 ** 1999-02-08 RELEASE 2.30 [STABLE]
 
 - Doc tweaks.
