@@ -6,13 +6,14 @@ use integer;
 use Carp;
 use Symbol;
 use IO::File;
-use vars qw($VERSION $EVERSION);
+use vars qw($VERSION $EVERSION $LOG $LOGIN);
 
-$VERSION = '2.07';
+$VERSION = '2.13';
 
 sub PATH() { 'ENVY_PATH' }
 sub STATE() { 'ENVY_STATE' }
 sub DIMENSION() { 'ENVY_DIMENSION' }
+sub CONTEXT() { 'ENVY_CONTEXT' }
 
 $EVERSION = 3;
 sub EVERSION() { 'ENVY_VERSION' }
@@ -20,9 +21,21 @@ sub EVERSION() { 'ENVY_VERSION' }
 sub new {
     croak "Envy::DB->new([env])" if @_ != 2;
     my ($class, $env) = @_;
-    my $o = bless { loading=>{} }, $class;
+    my $o = bless { fuzzy=>0, 'log'=>1 }, $class;
     $o->reset($env) if $env;
     $o;
+}
+
+sub fuzzy {
+    my ($o, $yes) = @_;
+    $o->{fuzzy} = $yes if @_ == 2;
+    $o->{fuzzy};
+}
+
+sub do_log {
+    my ($o, $yes) = @_;
+    $o->{'log'} = $yes if @_ == 2;
+    $o->{'log'};
 }
 
 sub debug {
@@ -36,6 +49,7 @@ sub reset {
     $o->{delta} = {};
     my %env = %$env;
     $o->{env} = \%env;
+    $o->{etop} = $o->{env}{ETOP} || '';
     for (&PATH, &STATE, &DIMENSION) { $o->{env}{$_} ||= ''; }
     $o->{'warn'} ||= [];
 }
@@ -49,7 +63,7 @@ sub _warn {
 
 sub version {
     my ($o) = @_;
-    $o->{env}{&EVERSION} || $o->{env}{'MODULE_VERSION'} || $EVERSION;
+    $o->{env}{&EVERSION} || $EVERSION;
 }
 
 sub strip_base {
@@ -66,8 +80,12 @@ sub _subst {
 	$var =~ tr [{}] []d;
 	if ($var eq 'MODULE_BASE' or $var eq 'modulebase' or
 	    $var eq 'ENVY_LINKBASE') {
+	    $o->_warn("$var is depreciated".$context)
+		if $var =~ /module/i;
 	    return strip_base($base);
 	} elsif ($var eq 'MODULE_REALBASE' or $var eq 'ENVY_BASE') {
+	    $o->_warn("$var is depreciated".$context)
+		if $var =~ /module/i;
 	    my $rbase = $base;
 	    while (-l $rbase) {
 		$rbase = readlink($rbase) or die "readlink $rbase";
@@ -110,10 +128,7 @@ sub add_path {
 
 	my $file = $m;
 	$m =~ s/\.(mo|env)$//;
-	if (defined $o->{cache}{$m}) {
-#	    $o->_warn("Using envy '$m' found at $o->{cache}{$m}, not from $p.");
-	    next;  #prepend overrides
-	}
+	next if defined $o->{cache}{$m};
 	$o->_warn("\t$m=$p/$file") if $o->debug;
 	$o->{cache}{$m} = "$p/$file";
     }
@@ -130,8 +145,7 @@ sub cache_path {
     }
 
     my $path;
-    if ($o->version == 2.01) { $path = $o->{env}{'MODULE_PATH'} || ''; }
-    else { $path = $o->{env}{&PATH} || ''; }
+    $path = $o->{env}{&PATH} || '';
 
     my @default;
     if ($ENV{REGRESSION_PATH}) {
@@ -161,25 +175,14 @@ sub cache_state {
     my %state;
     my %dimen;
 
-    if ($o->version == 2.01) {
-	for my $m (split(/:+/, $o->{env}{'MODULE_STATE2'})) {
-	    my ($k,$v) = split(/,/, $m);
-	    $state{$k}=$v;
-	    if (!$o->{cache}{$k} and $k =~ m-^/- and -d $k) {
-		$o->{cache}{$k}="$k/.envy";
-	    }
+    for my $m (split(/:+/, $o->{env}{&STATE})) {
+	my ($k,$v) = split(/,/, $m);
+	$state{$k}=$v;
+	if (!$o->{cache}{$k} and $k =~ m-^/- and -d $k) {
+	    $o->{cache}{$k}="$k/.envy";
 	}
-	%dimen = map { split(/,/) } split(/:+/, $o->{env}{'MODULE_DIMENSION2'});
-    } else {
-	for my $m (split(/:+/, $o->{env}{&STATE})) {
-	    my ($k,$v) = split(/,/, $m);
-	    $state{$k}=$v;
-	    if (!$o->{cache}{$k} and $k =~ m-^/- and -d $k) {
-		$o->{cache}{$k}="$k/.envy";
-	    }
-	}
-	%dimen = map { split(/,/) } split(/:+/, $o->{env}{&DIMENSION});
     }
+    %dimen = map { split(/,/) } split(/:+/, $o->{env}{&DIMENSION});
     
     $o->{dimen} = \%dimen;
     $o->{state} = \%state;
@@ -188,16 +191,6 @@ sub cache_state {
 sub write_state {
     my ($o) = @_;
     confess "write_state of nothing" if (!$o->{state} or !$o->{dimen});
-
-    # 2.01
-    $o->{env}{'MODULE_VERSION'} = 2.01;
-    $o->{env}{'MODULE_STATE2'} =
-	join(':',map {"$_,$o->{state}{$_}"} sort keys %{$o->{state}});
-    $o->{env}{'MODULE_DIMENSION2'} =
-	join(':',map {"$_,$o->{dimen}{$_}"} sort keys %{$o->{dimen}});
-    for (qw(MODULE_VERSION MODULE_STATE2 MODULE_DIMENSION2)) {
-	$o->{delta}{$_} = 1;
-    }
 
     # current version
     $o->{env}{&EVERSION} = $EVERSION;
@@ -214,17 +207,6 @@ sub write_state {
 
 sub write_path {
     my ($o) = @_;
-    for (@{$o->{default}}) { delete $o->{path}{$_}; }
-    my $new = join(':', sort keys %{$o->{path}});
-    if ($o->{env}{&PATH} ne $new) {
-	# 2.01
-	$o->{env}{'MODULE_PATH'} = $new;
-	$o->{delta}{'MODULE_PATH'} = 1;
-	
-	# current
-	$o->{env}{&PATH} = $new;
-	$o->{delta}{&PATH}=1;
-    }
 }
 
 sub can_edit {
@@ -247,24 +229,44 @@ sub do_envy {
     my ($o, $mo, $reverse) = @_;
     $o->cache_path($mo);
     $o->cache_state();
-    my $prior = exists $o->{env}{ETOP}? '1':'STARTUP';
+    $o->{context} = $o->{env}{ &CONTEXT } || 'shell';
+    $o->_warn("Envy: non-interactive fuzzy match used to load '$mo'.\n  Please switch to 'envy load $mo' instead of just 'envy $mo'!\n")
+	if $o->{context} ne 'shell' && $o->fuzzy;
+    if ($reverse and ($o->{state}{$mo} || '') eq 'STARTUP') {
+	warn "Envy: unloading '$mo' would cause envy itself to be unloaded!\n  Please try 'envy unload' instead.\n";
+	exit 1;
+    }
     _exe($o, $reverse, $mo,
-	 " while ".($reverse?"un":"")."loading envy '$mo'.\n", $prior);
+	 " while ".($reverse?"un":"")."loading envy '$mo'.\n", '1', 0);
     $o->write_state();
     $o->write_path();
 }
 
-sub _exe {
-    my ($o, $reverse, $mo, $context, $prior) = @_;
+sub unload_all {
+    my ($o) = @_;
+    for my $phase (1..2) {
+	for my $m ($o->to_unload($phase)) {
+	    $o->do_envy($m, 1) if !$o->is_unloaded($m);
+	}
+    }
+}
 
-    do { $o->_warn("Envy '$mo' is already unloaded".$context); return; } if
-	$reverse && $o->is_unloaded($mo);
+sub _exe {
+    my ($o, $reverse, $mo, $context, $prior, $loop) = @_;
+    ++$loop;
+    confess $o if @_ != 6;
+
     do { $o->_warn("Can't find envy '$mo'".$context); return; } if
 	!defined $o->{cache}{$mo};
-    do { $o->_warn("Recursive reloading detected in '$mo'".$context); return;} if defined $o->{loading}{$mo};
+    do { $o->_warn("Envy '$mo' is already unloaded".$context); return; } if
+	$reverse && $o->is_unloaded($mo);
+    do { $o->_warn("Recursive reloading detected".$context); return;} if $loop>100;
+
+    $o->unload_all() if $reverse and $o->{state}{$mo} eq 'STARTUP';
 
     my $base = (my $path = $o->{cache}{$mo});
-    $o->{loading}{$mo}=1;
+    $o->{etop} ||= $o->{env}{ETOP};
+    my $etop_set=0;
 
     my @file;
     {
@@ -285,10 +287,13 @@ sub _exe {
 	    my $str = $o->_subst($1, $base, $ctx);
 	    $o->_warn("Inappropriate whitespace detected".$context)
 		if $str =~ /\s/;
-	    $o->_exe($reverse, $str, $ctx, $mo);
+	    if (!$reverse or ($reverse and (!exists $o->{state}{$str} or 
+					    $o->{state}{$str} ne '2'))) {
+		$o->_exe($reverse, $str, $ctx, $mo, $loop);
+	    }
 
 	} elsif ($l =~ /^depreciated$/) {
-	    $o->_warn("Envy '$mo' is depreciated".$context)
+	    $o->_warn("Envy '$mo' is DEPRECIATED".$context)
 		if !$reverse;
 
 	} elsif ($l =~ /^dimension\s+(\S+)\s*$/) {
@@ -299,10 +304,15 @@ sub _exe {
 		die "Dimensions must be listed first".$context if !$first;
 		if (exists $o->{dimen}{$di} and $o->{dimen}{$di} ne $mo) {
 		    $o->_warn("Swapping $di from '$o->{dimen}{$di}'".$context);
-		    $o->_exe(1,$o->{dimen}{$di}, $ctx, $mo);
+		    $o->_exe(1,$o->{dimen}{$di}, $ctx, $mo, $loop);
 		}
 		$o->{dimen}{$di} = $mo;
 	    }
+
+	} elsif ($l =~ /^echo\s(.*)$/) {
+	    my $str = $o->_subst($1, $base, $ctx);
+	    $str .= "\n" if $str !~ m,\n$,;
+	    $o->_warn($str) if !$reverse && $o->{context} eq 'shell';
 
 	} elsif ($l =~ /^([^=+]+)=(.*)$/) {
 	    $first=0;
@@ -317,61 +327,63 @@ sub _exe {
 		do {$o->_warn("Variable '$k' redefined".$ctx) } if
 		    (exists $o->{env}{$k} and !exists $o->{state}{$mo});
 		$o->{env}{$k} = $o->_subst($v, $base, $ctx);
+		++$etop_set if $k eq 'ETOP';
 	    }
 
 	} elsif ($l =~ /^([^=+]+)\+\=(.*)$/) {
 	    $first=0;
 	    my ($k,$v) = ($1,$2);
+	    if ($k eq 'MODULE_PATH') {
+		$o->_warn("$k is depreciated".$ctx);
+		$k = &PATH;
+	    }
 	    next if !$o->can_edit($k, $ctx);
 	    my $vsubst = $o->_subst($v, $base, $ctx);
 	    $o->_warn("Inappropriate whitespace detected".$context)
 		if $vsubst =~ /\s/;
+
+	    # fetch delta
 	    my @delta = split(/:+/, $vsubst);
-	    my @now = defined $o->{env}{$k}? split(/:+/, $o->{env}{$k}) : ();
-	    if ($k eq 'PATH') {
-		my @nodot;
-		for (@now) { push(@nodot, $_) if $_ ne '.'; }
-		@now = @nodot;
-	    }
-	    if ($reverse) {
-		my @old = @now;
-		@now=();
-		my %nuke;
-		for (@delta) { $nuke{$_}=1 }
-		for my $e (@old) {
-		    if (exists $nuke{$e}) {
-#			warn "$k-=$e";
-			delete $o->{path}{$e} if ($k eq &PATH or
-						  $k eq 'MODULE_PATH');
-			delete $nuke{$e};
-			next;
-		    }
-		    push(@now, $e);
+	    my %delta;
+	    for (@delta) { $delta{$_}=1 }
+	    $delta{'.'}=1 if $k eq 'PATH';
+
+	    # fetch old list
+	    my @old = defined $o->{env}{$k}? split(/:+/, $o->{env}{$k}) : ();
+	    my %old;
+	    for (@old) { $old{$_}=1; }
+	    my $has_dot = exists $old{'.'};
+
+	    # filter @old with @delta -> @now
+	    my @now=();
+	    for my $e (@old) {
+		if (!$reverse and exists $old{$e} and exists $delta{$e}
+		    and $e ne '.') {
+		    $o->_warn("Component '$e' added to '$k' again".$ctx)
+			if !exists $o->{state}{$mo} && $k ne &PATH;
 		}
-	    } else {
-		my %now;
-		for (@now) { $now{$_}=1 }
-		for my $z (@delta) {
-		    if (exists $now{$z}) {
-			$o->_warn("Component '$z' added to '$k' again".$ctx)
-			    if !exists $o->{state}{$mo};
-			next;
-		    }
-		    $o->add_path($z) if ($k eq &PATH or
-					 $k eq 'MODULE_PATH');
-		    unshift(@now, $z);
-#			warn "$k+=$z";
+		if (exists $delta{$e}) { delete $delta{$e}; next; }
+		push(@now, $e);
+	    }
+	    if (!$reverse or $k eq &PATH) {
+		# add @delta back
+		for my $z (reverse @delta) {
+		    $o->add_path($z) if $k eq &PATH;
+		    if ($reverse) { push(@now, $z) }
+		    else { unshift(@now, $z); }
 		}
 	    }
-	    unshift(@now, '.') if $k eq 'PATH';
+	    unshift(@now, '.') if $k eq 'PATH' && $has_dot;
 	    $o->{env}{$k} = join(':', @now);
 
 	} else {
 	    $o->_warn("Inexplicable ignored: $l".$ctx);
 	}
     }
-    if ($reverse) { delete $o->{state}{$mo}; }
-    else {
+    if ($reverse) { 
+	delete $o->{state}{$mo};
+    } else {
+	$prior = 'STARTUP' if $prior eq '1'&& exists $o->{env}{ETOP} && $etop_set;
 	my $cur = $o->{state}{$mo};
 	if ($cur and $cur !~ m/^\d+$/ and $prior ne '1' and $cur ne $prior) {
 	    # dependency conflict - set to phase 2 for unload all
@@ -381,7 +393,18 @@ sub _exe {
 	    $o->{state}{$mo}=$prior;
 	}
     }
-    delete $o->{loading}{$mo};
+    if ($o->do_log() and $o->{etop}) {
+	$LOGIN ||= getlogin || getpwuid($<) || "?";
+	my $file = $o->{etop} . "/var/envy.log";
+	if (!$LOG) {
+	    $LOG = new IO::File;
+	    $LOG->open($file, O_WRONLY|O_APPEND|O_CREAT, 0666) 
+		or warn "envy: open $file: $!";
+	}
+	$LOG->print(join("\t", scalar(localtime), $LOGIN, $o->{context},
+			 ($reverse? 'un':'').'load', $mo)."\n")
+	    if $LOG->opened;
+    }
 }
 
 sub warnings {

@@ -9,19 +9,21 @@ use FindBin;
 
 eval { require "$FindBin::Bin/../lib/perl5/site_perl/Envy/DB.pm" }
   if !defined $ {"Envy::DB::VERSION"};
-eval { require Envy::DB }
-  if !defined $ {"Envy::DB::VERSION"};
 eval { require "$FindBin::Bin/../lib/Envy/DB.pm" } #blib
   if !defined $ {"Envy::DB::VERSION"};
+eval { require Envy::DB }
+  if !defined $ {"Envy::DB::VERSION"};
+
 die "Can't load Envy::DB: $@"
   if !defined $ {"Envy::DB::VERSION"};
 
 warn "Please use Envy::Load instead of Envy\n";
 
-my $db = new Envy::DB(\%ENV);
+$ENV{ENVY_CONTEXT} = $^X;
 
 sub import {
     my ($me, @imports) = @_;
+    my $db = new Envy::DB(\%ENV);
     for my $pkg (@imports) {
 	$db->do_envy($pkg, 0);
     }

@@ -8,7 +8,7 @@ warn "*" x 75 . "\n";
 warn "Envy cannot simply be installed with CPAN.pm.\n\n";
 warn "1. You must tweak envy_config.pm.\n";
 warn "2. Set up a few directories and test it with a unix login.\n";
-warn "3. Roll it out enterprise wide.\n\n";
+warn "3. Roll it out enterprise wide...\n\n";
 
 my @dot = qw(
 bash.inputrc   dot.dtprofile  dot.profile    login.part2

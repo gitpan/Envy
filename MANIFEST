@@ -1,9 +1,8 @@
+CHANGES
 DB.IN
 Envy.pm
 Load.pm
 MANIFEST
-MANIFEST.bak
-Makefile
 Makefile.PL
 README
 TODO
@@ -16,8 +15,9 @@ etc/login/dot.shrc
 etc/login/login.part2
 etc/login/profile.part2
 examples/dev.env
-examples/fvwm95-2.0.43a.env
 examples/openwin.env
+examples/perl.env
+examples/printing.env
 examples/prod.env
 login.IN
 profile.IN
@@ -42,6 +42,7 @@ t/etc/envy/tcltk.env
 t/load.t
 t/path.t
 t/path/out.good
+t/var/.KEEP
 t/wrap/out.good
 t/wrapper.t
 wrapper.IN

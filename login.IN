@@ -17,6 +17,7 @@ if (-s $HOME/.custom/startup) then
 endif
 if (! $#startup) set startup = "prod"
 
+set ENVY_CONTEXT=STARTUP
 set ENVY=#ENVY.PL#
 test -x $ENVY || echo Envy not found at $ENVY: PANIC
 

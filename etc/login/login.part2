@@ -19,6 +19,7 @@ endif
 alias envy 'envy.pl -csh \!* > /tmp/tmp.$$; source /tmp/tmp.$$; /bin/rm /tmp/tmp.$$'
 alias module 'envy.pl -csh \!* > /tmp/tmp.$$; source /tmp/tmp.$$; /bin/rm /tmp/tmp.$$'
 
+set ENVY_CONTEXT=custom
 test -f $HOME/.custom/login && source $HOME/.custom/login
 
 # We need to do this again because csh reads dot.cshrc before dot.login.

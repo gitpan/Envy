@@ -1,3 +1,4 @@
+GEMS /usr/sybase /nw/dist/odi/os/5.0/sunpro
 AB_PALETTE_PATH=.:/nw/dist/prod/res
 APPBASE=/nw/dist/prod
 APP_LIBS_FILE=/nw/dist/prod/config/libs_file
@@ -23,9 +24,6 @@ IRIS_RELEASE_BASE=/nw/dist/iris
 JUNK=white space here
 LD_LIBRARY_PATH=/nw/dist/odi/os/5.0/sunpro/lib:/Vendor/products/ssl/lib:/usr/sybase/lib
 MANPATH=/nw/dist/odi/os/5.0/sunpro/man
-MODULE_DIMENSION2=gems-version,gems-prod
-MODULE_STATE2=gems-prod,1:objstore,gems-prod:reuters,gems-prod:sybase,gems-prod:tcltk,gems-prod
-MODULE_VERSION=2.01
 MWFONT_CACHE_DIR=/nw/dist/var/os/osi
 OSMM_SCHEMA_LIBDIR=/opt/os/osmm/ldb
 OSOM_ROOTDIR=/nw/dist/odi/web/2.1
@@ -54,7 +52,4 @@ ENVY_VERSION=3
 ETOP=./t
 LD_LIBRARY_PATH=
 MANPATH=
-MODULE_DIMENSION2=
-MODULE_STATE2=
-MODULE_VERSION=2.01
 XAPPLRESDIR=

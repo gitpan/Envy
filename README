@@ -1,47 +1,59 @@
-Sick of the endlessly growing search PATH?
+Sick of your endlessly growing PATH?
 
 Name           DSLI  Description                                  Info
 -----------    ----  -------------------------------------------- -----
-Envy           RmpO  Shell independent environment variable mgmt  JPRIT
+Envy           RdpO  Shell independent environment variable mgmt  JPRIT
 
 
-1. Easy and safe upgrade from any other dot-file configuration.
-Tested with sh, ksh, bash, zsh, csh, and tcsh.
+1. Easy, safe upgrade from any other dot-file setup.  Tested with sh,
+ksh, bash, zsh, csh, and tcsh.
 
 2. A mechanism is provided for setting and prepending environment
-variables in a variety of flexible ways.  All modifications are fully
+variables in a variety of flexible ways.  All modifications are
 reversible.
 
 3. Machine generated .profile, .login, and crontab wrapper with
 centrally specified essential environment variables.  Everything else
 can be dependent on search paths.
 
-Get it from http://www.perl.com/CPAN/authors/id/JPRIT/!
+Get it via http://www.perl.com/CPAN/authors/id/JPRIT/ !
   (Also see LinkTree & Manifest)
 
 
 ##################
-# RE@ENT CHAN@ES #
+# RECENT CHAN@ES #
 ##################
 
 
-** 12-13-97 Released 2.07
+** 01-16-98 RELEASE 2.13
 
-- Slightly better dependency tracking.  Avoids unloading ETOP during
-'unload all'.
+- I've been waiting for the code to stabilize.  This release seems
+very stable so I am releasing it.  The csh support still needs to be
+brought up to date and better documentation is in the works.
 
-- envy load/unload now accept multiple targets on the command line
-
-- More whitespace stricture in envy files.
-
-- Slightly improved error messages.
-
-- Factored 'wrapper' to use INITIAL_ENV.
+- Phased out support for backward-compatible envy state environment
+variables.
 
 
-** 11-24-97 Released 2.06
+** 12-20-97 RELEASE 2.10
 
-- Initial public release.
+- Envys that set ETOP are treated specially.  Only one should be
+loadable at the same time.
+
+- Added support for 'echo' in envy files.
+
+- Components are no longer removed from ENVY_PATH.
+
+- Logging of all envious activity to $ETOP/var/envy.log.
+
+- Improved organization of *.part2.
+
+- Adding multiple components with += incorrectly occurred in the
+reverse order.  Fixed.
+
+- Adjusted dependency tracking to reduce false warnings.
+
+- '.' is no longer added to the front of the PATH by default.
 
 
 ----------------------------------------------------------------------
@@ -128,6 +140,7 @@ needs to be set to the top of your production tree such that:
 
 You'll need an prod.env that looks like this:
 
+  dimension central-tree
   ETOP=/nw/prod/usr
   PATH+=/nw/prod/usr/bin
   LD_LIBRARY_PATH+=/nw/prod/usr/lib
@@ -137,6 +150,7 @@ You'll need an prod.env that looks like this:
 
 You can also create a dev.env file for development:
 
+  dimension central-tree
   ETOP=/nw/dev/usr
   PATH+=/nw/dev/usr/bin
   LD_LIBRARY_PATH+=/nw/dev/usr/lib
@@ -164,7 +178,9 @@ Credits:
   Joshua Pritikin - Coder
 
 -------------------------------------------------------------------
-Copyright (c) 1997 Joshua Nathaniel Pritikin.  All rights reserved.
-This software is provided "as is" without express or implied warranty.
-This package is free software; you can redistribute it and/or modify
-it under the same terms as perl itself.
+Copyright © 1997-1998 Joshua Nathaniel Pritikin.  All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty.  It may be used, redistributed and/or modified
+under the terms of the Perl Artistic License (see
+http://www.perl.com/perl/misc/Artistic.html)

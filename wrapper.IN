@@ -12,6 +12,8 @@ fi
 ENVY=`dirname $0`/envy.pl
 test -x $ENVY || echo Envy not found at $ENVY: PANIC
 
+toload=''
+
 while [[ $1 = -* ]];
 do
 case $1 in
@@ -25,7 +27,7 @@ case $1 in
 
 -m|-e) while [[ $2 != -* && $# > 1 ]];
     do 
-	$ENVY load $2 > /tmp/t$$; . /tmp/t$$; /bin/rm -f /tmp/t$$
+        toload="$toload $2"
 	shift
     done;;
 
@@ -38,6 +40,11 @@ if [[ $# > 0 ]];  then
     shift
 fi
 done
+
+ENVY_CONTEXT=${commands[0]}
+export ENVY_CONTEXT
+$ENVY load $toload > /tmp/t$$; . /tmp/t$$; /bin/rm -f /tmp/t$$
+
 j=$i
 i=0
 while [[ $i < $j ]];

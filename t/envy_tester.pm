@@ -23,7 +23,7 @@ sub wrapper {
 }
 
 sub envy {
-    my $cmd = ("$production_perl -w ./blib/script/envy.pl ".join(' ', @_).
+    my $cmd = ("./blib/script/envy.pl ".join(' ', @_).
 	       " 1>/tmp/env 2>/tmp/stdout; . /tmp/env\n".
 	       "cat /tmp/stdout | grep -v Using\n".
 	       $catenv

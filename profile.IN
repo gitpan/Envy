@@ -18,6 +18,7 @@ if [ -s $HOME/.custom/startup ]; then
 fi
 if [ x$startup = x ]; then startup=prod; fi
 
+ENVY_CONTEXT=STARTUP
 ENVY=#ENVY.PL#
 test -x $ENVY || echo Envy not found at $ENVY: PANIC
 

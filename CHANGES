@@ -1,0 +1,17 @@
+** 12-13-97 RELEASE 2.07
+
+- Slightly better dependency tracking.  Avoids unloading ETOP during
+'unload all'.
+
+- envy load/unload now accept multiple targets on the command line
+
+- More whitespace stricture in envy files.
+
+- Slightly improved error messages.
+
+- Factored 'wrapper' to use INITIAL_ENV.
+
+
+** 11-24-97 RELEASE 2.06
+
+- Initial public release.

@@ -3,17 +3,11 @@ ENVY_DIMENSION=
 ENVY_STATE=
 ENVY_VERSION=3
 ETOP=./t
-MODULE_DIMENSION2=
-MODULE_STATE2=
-MODULE_VERSION=2.01
 ENVY_DIMENSION=gems-version,gems-1.9.1
 ENVY_STATE=gems-1.9.1,gems-dev:gems-dev,1
 ENVY_VERSION=3
 ETOP=./t
 GEMS_DEFAULT=1.9.1
-MODULE_DIMENSION2=gems-version,gems-1.9.1
-MODULE_STATE2=gems-1.9.1,gems-dev:gems-dev,1
-MODULE_VERSION=2.01
 SILLY_DEBUG_FLAGS=-g
    framemaker                           gems-prod
    gems-1.8                             java
@@ -26,9 +20,6 @@ ENVY_STATE=gems-1.9.1,gems-dev:gems-dev,1
 ENVY_VERSION=3
 ETOP=./t
 GEMS_DEFAULT=1.9.1
-MODULE_DIMENSION2=gems-version,gems-1.9.1
-MODULE_STATE2=gems-1.9.1,gems-dev:gems-dev,1
-MODULE_VERSION=2.01
 SILLY_DEBUG_FLAGS=-g
 Swapping gems-version from 'gems-1.9.1' while loading envy 'gems-1.9'.
 Variable 'YOUDONTKNOW' not set at envy 'gems-1.9' line 2
@@ -39,9 +30,6 @@ ENVY_STATE=gems-1.9,1:gems-dev,1
 ENVY_VERSION=3
 ETOP=./t
 GEMS_DEFAULT=1.9.1
-MODULE_DIMENSION2=gems-version,gems-1.9
-MODULE_STATE2=gems-1.9,1:gems-dev,1
-MODULE_VERSION=2.01
    framemaker                           gems-prod
    gems-1.8                             java
    gems-1.8.1                           objstore
@@ -54,9 +42,6 @@ ENVY_STATE=gems-1.9,1:gems-dev,1
 ENVY_VERSION=3
 ETOP=./t
 GEMS_DEFAULT=1.9.1
-MODULE_DIMENSION2=gems-version,gems-1.9
-MODULE_STATE2=gems-1.9,1:gems-dev,1
-MODULE_VERSION=2.01
 Envy 'gems-1.9.1' is already unloaded while unloading envy 'gems-1.9.1'.
 BROKEN=
 ENVY_DIMENSION=gems-version,gems-1.9
@@ -64,9 +49,6 @@ ENVY_STATE=gems-1.9,1:gems-dev,1
 ENVY_VERSION=3
 ETOP=./t
 GEMS_DEFAULT=1.9.1
-MODULE_DIMENSION2=gems-version,gems-1.9
-MODULE_STATE2=gems-1.9,1:gems-dev,1
-MODULE_VERSION=2.01
 Variable 'YOUDONTKNOW' not set at envy 'gems-1.9' line 2
 	 while loading envy 'gems-1.9'.
 BROKEN=
@@ -75,9 +57,6 @@ ENVY_STATE=gems-1.9,1:gems-dev,1
 ENVY_VERSION=3
 ETOP=./t
 GEMS_DEFAULT=1.9.1
-MODULE_DIMENSION2=gems-version,gems-1.9
-MODULE_STATE2=gems-1.9,1:gems-dev,1
-MODULE_VERSION=2.01
    framemaker                           gems-prod
    gems-1.8                             java
    gems-1.8.1                           objstore
@@ -90,26 +69,19 @@ ENVY_STATE=gems-1.9,1:gems-dev,1
 ENVY_VERSION=3
 ETOP=./t
 GEMS_DEFAULT=1.9.1
-MODULE_DIMENSION2=gems-version,gems-1.9
-MODULE_STATE2=gems-1.9,1:gems-dev,1
-MODULE_VERSION=2.01
 Envy 'gems-1.9.1' is already unloaded at envy 'gems-dev' line 1
 	 while unloading envy 'gems-dev'.
 ENVY_DIMENSION=
 ENVY_STATE=
 ENVY_VERSION=3
 ETOP=./t
-MODULE_DIMENSION2=
-MODULE_STATE2=
-MODULE_VERSION=2.01
-   framemaker                           objstore
-   gems-dev                             reuters
-   gems-prod                            sybase
-   java                                 tcltk
+   framemaker                           gems-prod
+   gems-1.8                             java
+   gems-1.8.1                           objstore
+   gems-1.9                             reuters
+   gems-1.9.1                           sybase
+   gems-dev                             tcltk
 ENVY_DIMENSION=
 ENVY_STATE=
 ENVY_VERSION=3
 ETOP=./t
-MODULE_DIMENSION2=
-MODULE_STATE2=
-MODULE_VERSION=2.01
