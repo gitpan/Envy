@@ -5,10 +5,11 @@ use strict;
 use integer;
 use Carp;
 use Symbol;
+use Fcntl;
 use IO::File;
 use vars qw($VERSION $EVERSION $LOG $LOGIN);
 
-$VERSION = '2.13';
+$VERSION = '2.15';
 
 sub PATH() { 'ENVY_PATH' }
 sub STATE() { 'ENVY_STATE' }
@@ -136,13 +137,10 @@ sub add_path {
 }
 
 sub cache_path {
-    my ($o, $mo) = @_;
+    my ($o) = @_;
     return if $o->{cache};
     confess "cache_state before cache_path" if exists $o->{state};
     $o->{cache} = {};
-    if ($mo and $mo =~ m-^/- and -d $mo) {
-	$o->{cache}{$mo} = "$mo/.envy";  # ~username
-    }
 
     my $path;
     $path = $o->{env}{&PATH} || '';
@@ -155,6 +153,9 @@ sub cache_path {
     }
 
     my @to_add = (split(/:+/, $path), @default);
+    if ($o->{env}{'HOME'} and -d $o->{env}{'HOME'}."/.envy") {
+	unshift(@to_add, $o->{env}{'HOME'}."/.envy");
+    }
     for my $p (@to_add) {
 	$o->add_path($p);
     }
@@ -178,9 +179,6 @@ sub cache_state {
     for my $m (split(/:+/, $o->{env}{&STATE})) {
 	my ($k,$v) = split(/,/, $m);
 	$state{$k}=$v;
-	if (!$o->{cache}{$k} and $k =~ m-^/- and -d $k) {
-	    $o->{cache}{$k}="$k/.envy";
-	}
     }
     %dimen = map { split(/,/) } split(/:+/, $o->{env}{&DIMENSION});
     
@@ -191,6 +189,9 @@ sub cache_state {
 sub write_state {
     my ($o) = @_;
     confess "write_state of nothing" if (!$o->{state} or !$o->{dimen});
+
+    # PATH is adjusted like other variables, except that removal
+    # from PATH is skipped via a special case.
 
     # current version
     $o->{env}{&EVERSION} = $EVERSION;
@@ -203,10 +204,6 @@ sub write_state {
     # cleanup
     delete $o->{state};
     delete $o->{dimen};
-}
-
-sub write_path {
-    my ($o) = @_;
 }
 
 sub can_edit {
@@ -227,7 +224,7 @@ sub is_unloaded {
 
 sub do_envy {
     my ($o, $mo, $reverse) = @_;
-    $o->cache_path($mo);
+    $o->cache_path();
     $o->cache_state();
     $o->{context} = $o->{env}{ &CONTEXT } || 'shell';
     $o->_warn("Envy: non-interactive fuzzy match used to load '$mo'.\n  Please switch to 'envy load $mo' instead of just 'envy $mo'!\n")
@@ -239,7 +236,6 @@ sub do_envy {
     _exe($o, $reverse, $mo,
 	 " while ".($reverse?"un":"")."loading envy '$mo'.\n", '1', 0);
     $o->write_state();
-    $o->write_path();
 }
 
 sub unload_all {
@@ -398,7 +394,7 @@ sub _exe {
 	my $file = $o->{etop} . "/var/envy.log";
 	if (!$LOG) {
 	    $LOG = new IO::File;
-	    $LOG->open($file, O_WRONLY|O_APPEND|O_CREAT, 0666) 
+	    $LOG->open($file, &O_WRONLY| &O_APPEND| &O_CREAT, 0666) 
 		or warn "envy: open $file: $!";
 	}
 	$LOG->print(join("\t", scalar(localtime), $LOGIN, $o->{context},

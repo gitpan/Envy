@@ -1,3 +1,24 @@
+** 12-20-97 RELEASE 2.10
+
+- Envys that set ETOP are treated specially.  Only one should be
+loadable at the same time.
+
+- Added support for 'echo' in envy files.
+
+- Components are no longer removed from ENVY_PATH.
+
+- Logging of all envious activity to $ETOP/var/envy.log.
+
+- Improved organization of *.part2.
+
+- Adding multiple components with += incorrectly occurred in the
+reverse order.  Fixed.
+
+- Adjusted dependency tracking to reduce false warnings.
+
+- '.' is no longer added to the front of the PATH by default.
+
+
 ** 12-13-97 RELEASE 2.07
 
 - Slightly better dependency tracking.  Avoids unloading ETOP during

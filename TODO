@@ -1,14 +1,12 @@
 ** TODO
 
-Improve organization of *.part2 - clean up window manager selection
+preserve loaded envys when switch top-levels
 
-LOGGING!
+improve organization of *.part2 - clean up window manager selection
 
 variable substitution should obey quoting rules??  maybe not!
 
-integrate with Error ?
-
-more realistic tests
+more realistic tests; test coverage analysis
 
 
 ** VAGUE POSSIBILITIES

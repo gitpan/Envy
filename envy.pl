@@ -1,6 +1,7 @@
 #!/usr/local/bin/perl -w
 use FindBin;
 use Cwd;
+use vars qw($running_under_some_shell);
 
 # We need to be extra careful to make sure envy.pl picks-up the right
 # version of Envy::DB.
@@ -171,6 +172,9 @@ sub HELP {
    PATH+=/nw/prod/odi/osji/5.0/bin   # Prepended to colin separated list.
    MYTOP=\$ENVY_BASE                  # Real path to envy without etc/envy/.
    MYTOP=\$ENVY_LINKBASE              # Path to envy without etc/envy/.
+
+   Envy looks in \$HOME/.envy/ for environment files.  You may use this
+   directory for testing.
 
 3] ENVIRONMENT VARIABLES
 

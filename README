@@ -13,16 +13,23 @@ variables in a variety of flexible ways.  All modifications are
 reversible.
 
 3. Machine generated .profile, .login, and crontab wrapper with
-centrally specified essential environment variables.  Everything else
-can be dependent on search paths.
+centrally specified bootstrap environment variables.  Everything else
+is determined dynamically.
 
 Get it via http://www.perl.com/CPAN/authors/id/JPRIT/ !
-  (Also see LinkTree & Manifest)
+  (Also see File::LinkTree & File::Manifest)
 
 
 ##################
 # RECENT CHAN@ES #
 ##################
+
+
+** 03-05-98 RELEASE 2.15
+
+- Fixed handling of $HOME/.envy.
+
+- Improvements to Envy::Load.
 
 
 ** 01-16-98 RELEASE 2.13
@@ -33,27 +40,6 @@ brought up to date and better documentation is in the works.
 
 - Phased out support for backward-compatible envy state environment
 variables.
-
-
-** 12-20-97 RELEASE 2.10
-
-- Envys that set ETOP are treated specially.  Only one should be
-loadable at the same time.
-
-- Added support for 'echo' in envy files.
-
-- Components are no longer removed from ENVY_PATH.
-
-- Logging of all envious activity to $ETOP/var/envy.log.
-
-- Improved organization of *.part2.
-
-- Adding multiple components with += incorrectly occurred in the
-reverse order.  Fixed.
-
-- Adjusted dependency tracking to reduce false warnings.
-
-- '.' is no longer added to the front of the PATH by default.
 
 
 ----------------------------------------------------------------------
@@ -141,31 +127,33 @@ needs to be set to the top of your production tree such that:
 You'll need an prod.env that looks like this:
 
   dimension central-tree
-  ETOP=/nw/prod/usr
-  PATH+=/nw/prod/usr/bin
-  LD_LIBRARY_PATH+=/nw/prod/usr/lib
-  PERL5LIB+=/nw/prod/usr/lib/perl5
-  MANPATH+=/nw/prod/usr/man:/nw/prod/usr/lib/perl5/man
-  ENVY_PATH+=/nw/prod/usr/etc/envy
+  ETOP=/nw/dist/prod
+  ESTAGE=prod
+ 
+  PATH+=/nw/dist/prod/bin
+  LD_LIBRARY_PATH+=/nw/dist/prod/lib
+  MANPATH+=/nw/dist/prod/man
+  ENVY_PATH+=$ETOP/etc/envy
 
 You can also create a dev.env file for development:
 
   dimension central-tree
   ETOP=/nw/dev/usr
-  PATH+=/nw/dev/usr/bin
-  LD_LIBRARY_PATH+=/nw/dev/usr/lib
-  PERL5LIB+=/nw/dev/usr/lib/perl5
-  MANPATH+=/nw/dev/usr/man:/nw/dev/usr/lib/perl5/man
-  ENVY_PATH+=/nw/dev/usr/etc/envy
+  ESTAGE=dev
 
-Put both of these files in /nw/prod/usr/etc/envy/.  To set up a
-particular user for envy, all you have to do is replace $HOME/.profile
-or $HOME/.login with symlinks:
+  PATH+=$ETOP/bin
+  LD_LIBRARY_PATH+=$ETOP/lib
+  MANPATH+=$ETOP/man
+  ENVY_PATH+=$ETOP/etc/envy
 
-  ln -s /nw/prod/usr/etc/login/dot.profile $HOME/.profile
-  ln -s /nw/prod/usr/etc/login/dot.login $HOME/.login
+Put both of these files in $ETOP/etc/envy/.  To set up a particular
+user for envy, all you have to do is replace $HOME/.profile or
+$HOME/.login with symlinks:
 
-Any old $HOME/dot files will be renamed if necessary (and not
+  ln -s $ETOP/etc/login/dot.profile $HOME/.profile
+  ln -s $ETOP/etc/login/dot.login $HOME/.login
+
+Any prior $HOME/dot files will be renamed if necessary (but not
 deleted).
 
 ----------------------------------------------------------------------
@@ -175,7 +163,10 @@ Credits:
   Alexander Shugayev - System Administrator
   Devine Kerr - Developer
   Ken Nawyn - Senior System Administrator
-  Joshua Pritikin - Coder
+  Joshua Pritikin - Magician
+
+Support:
+  pritikin@mindspring.com
 
 -------------------------------------------------------------------
 Copyright © 1997-1998 Joshua Nathaniel Pritikin.  All rights reserved.

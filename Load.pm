@@ -24,13 +24,44 @@ sub import {
 	$db->do_envy($pkg, 0);
     }
     for ($db->warnings) { print STDERR $_; }
+    $me->sync($db);
+}
+
+sub sync {
+    my ($e, $db) = @_;
     for my $z ($db->to_sync()) {
 	my ($k,$v) = @$z;
-	$ENV{$k} = $v;
+	if (defined $v) {
+	    $ENV{$k} = $v;
+	} else {
+	    delete $ENV{$k};
+	}
     }
 }
 
+sub new {
+    my $class = shift;
+    my %old = %ENV;
+    bless \%old, $class;
+}
+
+sub load {
+    my $e = shift;
+    my $db = new Envy::DB(\%ENV);
+    for my $pkg (@_) {
+	$db->do_envy($pkg, 0);
+    }
+    $e->sync($db);
+    $db->warnings();
+}
+
+sub DESTROY {
+    my $o = shift;
+    %ENV = %$o;
+}
+
 1;
+__END__
 
 =head1 NAME
 
@@ -39,6 +70,13 @@ Envy::Load - Load Envy Files
 =head1 SYNOPSIS
 
     use Envy::Load qw(dev objstore);
+
+    {    
+	my $env = new Envy::Load();
+	$env->load(qw(prod testdb));
+
+	# %ENV restored when $env goes out of scope
+    }
 
 =head1 DESCRIPTION
 

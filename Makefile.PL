@@ -4,11 +4,29 @@ use lib '.';
 use envy_config;
 use ExtUtils::MakeMaker;
 
-warn "*" x 75 . "\n";
-warn "Envy cannot simply be installed with CPAN.pm.\n\n";
-warn "1. You must tweak envy_config.pm.\n";
-warn "2. Set up a few directories and test it with a unix login.\n";
-warn "3. Roll it out enterprise wide...\n\n";
+warn "-" x 75 . "\n";
+warn "
+Envy is a comprehensive, multidimensional environment manager.
+Installation is going to take some work beyond simply typing 'make'.
+
+1. Use the most 'production' perl at your site to create the Makefile.
+
+2. Tweak envy_config.pm according to your preference.  If you are a
+first time user and want a test drive:
+
+- Put the top level tree (\$ETOP) under your home directory.
+
+- Envy will generate dot.(profile|login) files.  Symlink them into the
+top of your home directory so your shell will read them at login.
+
+- Logout and login.  Type 'envy list' or 'envy help'.
+
+3. Explore.  Get a feel for it and get other people to try it.  NYC
+was not built in a day.
+
+Thanks and good luck!
+
+";
 
 my @dot = qw(
 bash.inputrc   dot.dtprofile  dot.profile    login.part2
@@ -17,7 +35,7 @@ dot.cshrc      dot.login      dot.shrc       profile.part2
 
 WriteMakefile(NAME => 'Envy',
 	      PREREQ_PM => { File::Recurse => 0,
-			     Test::Output => '1.02' },
+			     Test => '1.00', Test::Output => '1.02' },
 	      EXE_FILES => [qw(envy.pl wrapper)],
 	      MAN1PODS => {}, #nobody reads it anyway
 	      MAN3PODS => {},

@@ -8,9 +8,6 @@ umask 0
 test -s $HOME/.tilde || mkdir -m 700 $HOME/.tilde
 /bin/rm -f $HOME/.tilde/* >&! /dev/null  #redirect since glob can fail
 
-# ObjectStore
-test -s /tmp/ostore || mkdir -m 777 /tmp/ostore
-
 if ($tty) then
   stty sane
   stty erase '^h' kill '^u' susp '^z'
