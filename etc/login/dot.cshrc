@@ -23,7 +23,7 @@ alias psg 'ps -ef | grep \!*'
 set prompt = "`uname -n`:`whoami`:`pwd`< \! >% "
 alias cd        'chdir \!* ; set prompt = "`uname -n`:`whoami`:`pwd`< \! >% "'
 
-set f=$ETOP/etc/login/cshrc.site; test -f $f && source $f
-set f=$HOME/.custom/cshrc; test -f $f && source $f
+set f=$ETOP/etc/login/cshrc.site; /bin/test -f $f && source $f
+set f=$HOME/.custom/cshrc; /bin/test -f $f && source $f
 
 endif

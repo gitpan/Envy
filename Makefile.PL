@@ -1,6 +1,6 @@
 #-*-perl-*-
 
-require 5.005; # probably?
+require 5.00405; # probably just need Test?
 
 use ExtUtils::MakeMaker;
 

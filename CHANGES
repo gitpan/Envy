@@ -1,3 +1,27 @@
+** 1999-06-09 RELEASE 2.36
+
+- Significant ergonomic improvements to wrapper. (Kudos to
+Alexander.Shugayev@db.com & Vicky.Nayer@db.com)
+
+- Assure order of ENVY_PATH when switching between environments.
+
+- Warnings for stupid dimension names.
+
+- Quell warnings emitted by unload all.
+
+- s/depreciated/deprecated/g
+
+- Versions 2.34 & 2.35 were for prerelease testing.
+
+
+** 1999-05-13 RELEASE 2.33 [STABLE]
+
+- Change default $PATH to /bin:/usr/bin (suggested by
+binkley@bigfoot.com),
+
+- New FAQ entry: how to manage perl releases with envy.
+
+
 ** 1999-05-07 RELEASE 2.32 [STABLE]
 
 - Change default $PATH to /bin.

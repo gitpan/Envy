@@ -19,7 +19,7 @@ reversible.  I think reversibility is important.
 crontab wrappers.
 
 Available at http://www.perl.com/CPAN/authors/id/JPRIT/ !
-  (requires perl 5.005)
+  (Requires perl 5.004_05 or newer.)
 
 ----------------------------------------------------------------------
 
@@ -62,36 +62,17 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1999-06-21 RELEASE 2.38
+
+- Built okay with 5.004_05.  Update documentation.
+
+
 ** 1999-06-15 RELEASE 2.37
 
 - ENVY_PATH is now used only to find the First dimension.  Moreover,
 it is required that ENVY_PATH be re-assigned in First.  This should
 make it possible to switch between First dimensions correctly.  (Based
 on insightful feedback from Alexander.Shugayev@db.com!)
-
-
-** 1999-06-09 RELEASE 2.36
-
-- Significant ergonomic improvements to wrapper. (Kudos to
-Alexander.Shugayev@db.com & Vicky.Nayer@db.com)
-
-- Assure order of ENVY_PATH when switching between environments.
-
-- Warnings for stupid dimension names.
-
-- Quell warnings emitted by unload all.
-
-- s/depreciated/deprecated/g
-
-- Versions 2.34 & 2.35 were for prerelease testing.
-
-
-** 1999-05-13 RELEASE 2.33 [STABLE]
-
-- Change default $PATH to /bin:/usr/bin (suggested by
-binkley@bigfoot.com),
-
-- New FAQ entry: how to manage perl releases with envy.
 
 
 see ./INSTALL for hints on installation
