@@ -106,8 +106,11 @@ sub GO() {
     } elsif ($cmd eq "un" or $cmd eq "unload") {
 	Huh("Unenvy unload doesn't mean what?")
 	    if $is_unload;
-	push @ARGV, $db->{first} if @ARGV == 0;
-	while (@ARGV) { $db->envy(1, shift @ARGV); }
+	if (@ARGV == 0 or $ARGV[0] eq 'all') {
+	    $db->unload_all
+	} else {
+	    while (@ARGV) { $db->envy(1, shift @ARGV); }
+	}
 	sync_env($db);
 	
     } elsif ($cmd eq "list") {

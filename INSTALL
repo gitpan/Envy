@@ -73,10 +73,11 @@ back) and you should be back to normal.
 
 =head2 INSTALLING
 
-By default, envy installs basic login scripts appropriate for most
-Unix systems.  However, you probably don't need or want them.  All
-that is really necessary for envy to work correctly, besides
-installing the perl code, are the following shell functions:
+By default, envy installs login scripts appropriate for some Unix
+systems.  However, you probably don't need or want them.  I have
+received reports that the default login scripts do not work with
+cmdtool or ssh. All that is really necessary for envy to work
+correctly, besides the perl code, are the following shell functions:
 
 SH:
 
@@ -126,37 +127,19 @@ longer fail unexpectedly due to missing environment variables.
 
 =back
 
-=head1 ENVY SETUP
-
-Hopefully, you will find envy very easy to set up for your site.  If
-there is any way it can be made easier, please let me know!
-
-Before you install 'make test'; check ./Conf.pm; and 'make diff'.
-
-=head2 SITE SETUP
-
-Here is what happens upon login (Bourne Shell):
-
-  $HOME/.profile -> $ETOP/etc/login/dot.profile
-  envy load `cat $HOME/.custom/startup`
-  $ETOP/etc/login/profile.part2
-  $ETOP/etc/login/profile.site
-  $HOME/.custom/profile
-    $HOME/.shrc -> $ETOP/etc/login/dot.shrc
-    $ETOP/etc/login/shrc.site
-    $HOME/.custom/shrc
-  $ETOP/etc/desktop/`cat $HOME/.custom/win.name`
-
-You are free to customize the *.site files (or omit them).  You will
-also need to set up window manager startup scripts under
-$ETOP/etc/desktop.  See the L<INSTALLING> section above if you are
-planning not to use the login scripts supplied with envy.
-
 =head2 CRONTAB
 
 Use C<$ETOP/bin/wrapper> to initiate cron jobs.  C<wrapper> is a very
 simple script that loads envies given on the command line and then
 executes shell commands.
+
+=head2 ENVY SETUP
+
+Hopefully, you will find envy very easy to set up for your site.  If
+there is any way it can be made easier, please let me know!
+
+Before you 'make install', be sure to 'make test'. Also check
+./Conf.pm and 'make diff'.
 
 =head1 EXTENSION API
 

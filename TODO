@@ -1,5 +1,9 @@
 ** TODO
 
+wrapper snarfs flags beyond -s; this can mess things up
+
+unload all should try to unload First kids twice
+
 Read the $ENVY_PATH one component at a time!  Big performance win on
 slow file-systems (like mine! :-)
 
@@ -9,7 +13,7 @@ explicit dependencies for refcnt>1
 
 include package   # always reload; no dimensions?
 
-support for dimension migration (aliases)
+support for dimension migration (aliases)?
 
 real lexical analysis -- use XS?
 
@@ -17,8 +21,7 @@ improve catalogue
 
 machine generate shell script variants (see Rc)
   deprecate csh?
-  keeps sh/csh in sync
-  less chance of bugs
+  keeps sh/csh in sync, less chance of bugs
   make compatible with rc/es!
 
 regression tests
@@ -64,7 +67,7 @@ On Thu, 3 Sep 1998 Tony.Parent@Symbios.COM wrote:
 > I'll essetially have to load each module to make sure the vars are set and
 > I get the correct sub module.
  
-Gack!  Your right!  What a mess!  :-)
+Gack!  You're right!  What a mess!  :-)
  
 > a.env:
 > 

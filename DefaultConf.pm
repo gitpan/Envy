@@ -18,7 +18,7 @@ if (exists $ENV{PERL5PREFIX}) {
 }
 
 %env0 = (
-	 PATH => '/usr/bin:/usr/sbin:/usr/ucb',
+	 PATH => '/bin:/usr/bin',
 	 MANPATH => '/usr/man',
 	 LD_LIBRARY_PATH => '/usr/lib',
 	 EDITOR => 'vi',

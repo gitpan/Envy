@@ -10,7 +10,7 @@ use Symbol;
 use Fcntl;
 use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $MAX_VAR_LENGTH
-	    $LOGIN $Context $Loop $Path);
+	    $LOGIN $Context $Loop $Path @FORCEPATH);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(@DefaultPath);
 $VERSION = '#VERSION#';
@@ -29,8 +29,12 @@ sub CONTEXT()     { 'ENVY_CONTEXT'   }
 
 if ($ENV{REGRESSION_ENVY_PATH}) {
     @DefaultPath = split m/\s+/, $ENV{REGRESSION_ENVY_PATH};
+    @FORCEPATH = ();
 } else {
     @DefaultPath = #SEARCH#
+	;
+    @FORCEPATH = #FORCEPATH#
+	;
 }
 
 sub new { #PUBLIC
@@ -510,6 +514,7 @@ sub rejoin {
     # SPECIAL CASES:
     #
     # PATH      - '.' is always kept first if it is seen
+    #             @FORCEPATH is always next
     #             don't remove ourselves from the path?
     #             if switching to a new envy.pl abort subsequent loads?
     #
@@ -537,18 +542,21 @@ sub rejoin {
     }
     elsif ($k eq 'PATH') {
 	my $has_dot = exists $old{'.'};
-	push @now, @delta if $prepend && !$reverse;
+	my %ign; for ('.', @FORCEPATH) { $ign{$_}=1 }
+
+	@now = @delta if $prepend && !$reverse;
 	
 	for my $p (@old) {
-	    if (!$reverse and exists $delta{$p} and $p ne '.') {
+	    if (!$reverse and exists $delta{$p} and !exists $ign{$p}) {
 		$o->n("Component '$p' added to '$k' again");
 		next
 	    }
-	    next if delete $delta{$p} || $p eq '.';
+	    next if delete $delta{$p} || exists $ign{$p};
 	    push @now, $p;
 	}
 
 	push @now, @delta if !$prepend && !$reverse;
+	unshift @now, @FORCEPATH;
 	unshift @now, '.' if $has_dot; # once sloppy always sloppy
     }
     else {

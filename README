@@ -60,22 +60,26 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
-** 1999-02-08 RELEASE 2.30 [STABLE]
+** 1999-05-13 RELEASE 2.33 [STABLE]
 
-- Doc tweaks.
+- Change default $PATH to /bin:/usr/bin (suggested by
+binkley@bigfoot.com),
 
-
-** 1999-02-04 RELEASE 2.29 [STABLE]
-
-- ENVY_PATH is no longer reset when unloading.  (Kudos to Sasha! :-)
-Added regression tests.
-
-- Doc tweaks.
+- New FAQ entry: how to manage perl releases with envy.
 
 
-** 1998-12-31 RELEASE 2.28 [STABLE]
+** 1999-05-07 RELEASE 2.32 [STABLE]
 
-- Fixed 'envy reload'.
+- Change default $PATH to /bin.
+
+
+** 1999-05-06 RELEASE 2.31 [STABLE]
+
+- Keep the first components of $PATH set to Conf.pm $env0{PATH}
+(suggested by Chris Fumai).  This closes the door on malicious
+binaries (named 'ls' for example).
+
+- Repaired 'envy unload all'.
 
 
 see ./INSTALL for hints on installation

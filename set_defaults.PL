@@ -89,6 +89,8 @@ my $subst = {'#SEARCH#' => "qw(".join(' ',@{$How{path}}).")",
 	     '#STARTUP#' => $How{startup},
 	     '#ENVY.PL#' => "$How{prefix}/bin/envy.pl",
 	     '#INITIAL_ENV#' => \&do_init_env,
+	     '#FORCEPATH#' =>
+	     "qw(".join(' ', split /:+/, $How{env0}{PATH}).")",
 	     '#SAFE_SYMLINK#' => $symlink_str,
 	     '#ETOP#' => $How{prefix},
 	     '#PERL5LIB#' => $perl5lib,

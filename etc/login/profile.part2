@@ -20,6 +20,11 @@ fi
 
 #---------------------------------------------------------------
 # Shell prompt
+#
+# $PROMPT contains control sequences specific to xterm or vt100
+# terminals.  Problems have been reported by folks who use Sun's
+# OpenWindows cmdtool.  If you are a cmdtool user then you
+# can write your own login scripts.  This is just an example.
 #---------------------------------------------------------------
 HOSTNAME=`hostname`
 case `basename $SHELL` in
