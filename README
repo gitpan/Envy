@@ -59,6 +59,11 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1999-08-30 RELEASE 2.44
+
+- Emergency fix for wrapper.
+
+
 ** 1999-08-27 RELEASE 2.43
 
 - Trace activity mode (--trace) to show exactly what is happening.

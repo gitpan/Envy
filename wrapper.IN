@@ -91,7 +91,7 @@ wr_dirname=`dirname $0`
 wr_envy=$wr_dirname/envy.pl
 test -x $wr_envy || echo "wrapper: 'envy' not found at $wr_envy: PANIC"
 
-if [ x$wr_toload != x ]; then
+if [[ x$wr_toload != x ]]; then
   if [ $wr_verbose -eq 1 ]; then
     echo 'wrapper: eval `'"$wr_envy load $wr_toload"'`'
   fi
