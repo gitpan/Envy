@@ -1,7 +1,5 @@
 ** TODO
 
-freshmeat.net
-
 description / summary
 
 real lexical analysis
@@ -12,7 +10,6 @@ short cuts:
   envied : show only loaded *.env
 
 regression tests
-  append / prepend
   dimension swapping
   tests for .priv
   top-level switching

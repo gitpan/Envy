@@ -19,9 +19,9 @@ sub sync_env {
 	my ($k,$v) = @$z;
 	if (defined $v) {
 	    if ($is_csh) {
-		print "setenv $k $v;\n";
+		print "setenv $k '$v';\n";
 	    } else {
-		print "$k=$v; export $k;\n";
+		print "$k='$v'; export $k;\n";
 	    }
 	} else {
 	    if ($is_csh) {

@@ -11,7 +11,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $LOGIN $Reloading $Context $Loop $Path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(@DefaultPath);
-$VERSION = '2.17';
+$VERSION = '2.18';
 
 umask 0;  # Figure out how to run setuid 'envy' XXX
 
@@ -194,7 +194,7 @@ sub is_unloaded {
 sub is_first {
     if (@_ == 1) {
 	my ($o) = @_;
-	(keys %{$o->{loaded}}) == 0
+	!$o->{dimen}{First}
     } elsif (@_ == 2) {
 	my ($o, $mo) = @_;
 	my $f = $o->{dimen}{First};
@@ -233,11 +233,12 @@ sub set_unloaded { #PRIVATE
 
 sub nav_dimension { #PRIVATE
     my ($o, $reverse, $di, $by) = @_;
-    my $old = $o->{dimen}{$di};
+    my $old = $o->{dimen}{$di} if exists $o->{dimen}{$di};
     if (!$reverse) {
 	if ($o->is_first) {
 	    $o->w(WARN, "Envy '$by' should use dimension 'First' instead of '$di'")
 		if $di ne 'First';
+	    $di = 'First';
 	}
 	elsif ($old and $old ne $by) {
 	    $o->w(NOISY, "Swapping $di from '$old'");
@@ -245,9 +246,9 @@ sub nav_dimension { #PRIVATE
 	}
 	$o->{dimen}{$di} = $by;
 	if ($di eq 'First') {
-	    $o->{first} ||= $by;
+	    $o->{first} ||= $by; # first First!
 	    $o->unload_all()
-		if $o->{first} ne $by;
+		if $by ne $o->{first};
 	}
 
     } else {

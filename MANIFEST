@@ -9,7 +9,6 @@ Makefile.PL
 README
 TODO
 envy.pl
-etc/envy/test.env
 etc/login/bash.inputrc
 etc/login/dot.cshrc
 etc/login/dot.dtprofile

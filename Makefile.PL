@@ -75,7 +75,7 @@ sub MY::postamble {
 
     while (my($k,$v)=each %$subst_files) {
 	$str .= "
-$v :: $k set_defaults.PL".'
+$v :: $k set_defaults.PL Config.pm".'
 	$(PERL) -I$(INST_ARCHLIB) -I$(INST_LIB) -I$(PERL_ARCHLIB) -I$(PERL_LIB) set_defaults.PL'."\n";
     }
     $str .= "

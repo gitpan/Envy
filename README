@@ -26,6 +26,11 @@ Get it via http://www.perl.com/CPAN/authors/id/JPRIT/ !
 ##################
 
 
+** 1998-09-03 RELEASE 2.18
+
+- Tweaked handling of 'First' dimension.
+
+
 ** 1998-09-01 RELEASE 2.17
 
 - Append and assignment were ambiguous and assignment took precedence.
