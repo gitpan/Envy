@@ -1,0 +1,96 @@
+=head1 WHERE DOES ENVY FIT IN?
+
+We are looking into how to sink up two seprate job sits, with common
+software, and other tools.  Envy struck us as a way to go, but we are
+not sure of all the possable usages of the software.  Our objective is
+to have a way to maintain two separate job sites, and not spend alot
+of time checking paths, working tool directories, and so forth.  How
+does envy fit in?
+
+Envy is designed to centralize specification of environment variables.
+It also helps manage dependencies between versions.  It sounds like
+envy will fit your requirements.  Read on!
+
+=head1 IS THERE ANY DOCUMENTATION ON THE FORMAT OF AN .ENV FILE?
+
+See 'envy help'!
+
+=head1 WHY IS IT IMPORTANT TO BE ABLE TO UNLOAD?
+
+Sure, you could just start a fresh shell but this isn't very clean or
+intuitive.  Also important, it is the requirement of being able to
+unload that restricts the kind of operations that are supported.  This
+principle guided the design of envy as much as anything else.
+
+=head1 HOW CAN I DO CONDITIONAL REQUIRE?
+
+I want to do something like this:
+
+if($SITE == "FC"){
+  require mgc.site1  
+}elsif($SITE == "CS"){
+  require mgc.site2
+}
+
+Maybe you didn't realize that variable interpolation is also done in
+require?  For example
+
+  require mgc.$SITE
+
+=head1 DIMENSIONS?
+
+Only one version of a particular dimension can be active on one time.
+For example, if you have a set of envy files like this:
+
+  skylark-1.1.env
+  skylark-1.2.env
+  boomhopper-3.1.env
+  boomhopper-3.2.env
+
+Set up 'skylark' as one dimension and 'boomhopper' as another.  Then
+you can mix versions but you can't have two versions of 'boomhopper'
+active at once.
+
+=head1 ARE THERE ANY TOOLS SIMILAR TO ENVY?
+
+Envy shares some ideas with www.modules.org.  That is the only similar
+tool I know of.
+
+=head1 HOW DO I TEST NEW .ENV FILES?
+
+Put them in $HOME/.envy/.  This directory is always in envy's search
+path.
+
+=head1 WHAT IS WRAPPER?
+
+Wrapper is for crontab.  It makes testing crontab entries very easy:
+
+  env -i /path/to/bin/wrapper -m prod myenv -s 'script...'
+
+=head1 WHAT IF USERS ARE RESISTING?
+
+echo
+echo *** Welcome to Big Company!
+echo
+echo 1. If you are a developer, you might like to be in 'dev' by default:
+echo   echo dev > $HOME/.custom/startup
+echo
+echo 2. If you write crontab scripts, make sure they can run like this:
+echo   env -i $ETOP/bin/wrapper -s 'script...'
+echo
+echo We realize this is a bit confusing.  If you have any questions,
+echo please don't hesitate to voice your concerns or questions to
+echo Sasha or Joshua.
+echo
+echo WE FEEL THAT THE ENVY SYSTEM MEETS THE REQUIREMENTS IN THE
+echo SIMPLEST POSSIBLE MANNER.  THANK YOU VERY MUCH FOR YOUR PATIENCE.
+echo
+
+=head1 WHAT IS THE DIFFERENCE BETWEEN AN .ENV FILE AND A .MO FILE?
+
+.mo is the old extension.  Otherwise they are identical.
+
+=head1 THANKS
+
+A big thanks to Tony.Parent@symbios.com and Jerry.Hoffman@symbios.com
+for motivating this FAQ by asking many questions!

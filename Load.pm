@@ -1,29 +1,17 @@
+use strict;
 package Envy::Load;
 use Carp;
-use FindBin;
-
-# We need to be extra careful to make sure we pick-up the right
-# version of Envy::DB.
-
-eval { require "$FindBin::Bin/../lib/perl5/site_perl/Envy/DB.pm" }
-  if !defined $ {"Envy::DB::VERSION"};
-eval { require "$FindBin::Bin/../lib/Envy/DB.pm" } #blib
-  if !defined $ {"Envy::DB::VERSION"};
-eval { require Envy::DB }
-  if !defined $ {"Envy::DB::VERSION"};
-
-die "Can't find Envy::DB: $@"
-  if !defined $ {"Envy::DB::VERSION"};
+require Envy::DB;
 
 $ENV{ENVY_CONTEXT} = $^X;
 
 sub import {
     my ($me, @imports) = @_;
-    my $db = new Envy::DB(\%ENV);
+    my $db = Envy::DB->new(\%ENV);
     for my $pkg (@imports) {
-	$db->do_envy($pkg, 0);
+	$db->envy(0, $pkg);
     }
-    for ($db->warnings) { print STDERR $_; }
+    for ($db->warnings(1)) { print STDERR $_; }
     $me->sync($db);
 }
 
@@ -47,12 +35,12 @@ sub new {
 
 sub load {
     my $e = shift;
-    my $db = new Envy::DB(\%ENV);
+    my $db = Envy::DB->new(\%ENV);
     for my $pkg (@_) {
-	$db->do_envy($pkg, 0);
+	$db->envy(0, $pkg);
     }
     $e->sync($db);
-    $db->warnings();
+    for ($db->warnings(1)) { print STDERR $_; }
 }
 
 sub DESTROY {
@@ -72,7 +60,7 @@ Envy::Load - Load Envy Files
     use Envy::Load qw(dev objstore);
 
     {    
-	my $env = new Envy::Load();
+	my $env = Envy::Load->new();
 	$env->load(qw(prod testdb));
 
 	# %ENV restored when $env goes out of scope

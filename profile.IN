@@ -5,6 +5,8 @@
 #
 # test with bash: env -i HOME=$HOME $SHELL --login
 # test with ksh : ?
+#
+# set -x
 
 #INITIAL_ENV#
 
@@ -16,7 +18,7 @@ fi
 if [ -s $HOME/.custom/startup ]; then
   startup=`cat $HOME/.custom/startup`
 fi
-if [ x$startup = x ]; then startup=prod; fi
+if [ x$startup = x ]; then startup=#STARTUP#; fi
 
 ENVY_CONTEXT=STARTUP
 ENVY=#ENVY.PL#

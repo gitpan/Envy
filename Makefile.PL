@@ -1,87 +1,91 @@
 #-*-perl-*-
 
-use lib '.';
-use envy_config;
 use ExtUtils::MakeMaker;
 
 warn "-" x 75 . "\n";
-warn "
-Envy is a comprehensive, multidimensional environment manager.
+warn q[
+Envy is a comprehensive, multi-dimensional environment manager.
 Installation is going to take some work beyond simply typing 'make'.
+If you are a first time user:
 
-1. Use the most 'production' perl at your site to create the Makefile.
+   PERL5PREFIX=$HOME/test; export PERL5PREFIX         #sh
+   setenv PERL5PREFIX=$HOME/test                      #csh
+   perl Makefile.PL
+   make test; make install
 
-2. Tweak envy_config.pm according to your preference.  If you are a
-first time user and want a test drive:
+   env -i $PERL5PREFIX/bin/wrapper -s echo            # test it
 
-- Put the top level tree (\$ETOP) under your home directory.
+   mv $HOME/.profile $HOME/.profile.bak               #sh
+   ln -s $PERL5PREFIX/etc/dot.profile $HOME/.profile  #sh
+   mv $HOME/.login $HOME/.login.bak                   #csh
+   ln -s $PERL5PREFIX/etc/dot.login $HOME/.login      #csh
 
-- Envy will generate dot.(profile|login) files.  Symlink them into the
-top of your home directory so your shell will read them at login.
+   Logout and login.  Type 'envy list' or 'envy help'.
 
-- Logout and login.  Type 'envy list' or 'envy help'.
-
-3. Explore.  Get a feel for it and get other people to try it.  NYC
-was not built in a day.
-
+Explore.  Get a feel for it, and get others to try it.
 Thanks and good luck!
 
-";
+];
+
+unlink "./example/area1/etc/envy/area2.env";
+symlink "../../../../example/area2/etc/envy/area2.env",
+    "./example/area1/etc/envy/area2.env" or warn $!;
+unlink "./example/area2/etc/envy/area1.env";
+symlink "../../../../example/area1/etc/envy/area1.env",
+    "./example/area2/etc/envy/area1.env" or warn $!;
 
 my @dot = qw(
-bash.inputrc   dot.dtprofile  dot.profile    login.part2
-dot.cshrc      dot.login      dot.shrc       profile.part2
+  dot.profile profile.part2 dot.shrc
+  dot.cshrc dot.login login.part2
+  bash.inputrc dot.dtprofile
 );
 
-WriteMakefile(NAME => 'Envy',
-	      PREREQ_PM => { File::Recurse => 0,
-			     Test => '1.00', Test::Output => '1.02' },
+my @prefix = (PREFIX => $ENV{PERL5PREFIX})
+    if exists $ENV{PERL5PREFIX};
+
+my @test = ('test.env' => '$(INST_ETC)/envy/test.env')
+    if exists $ENV{PERL5PREFIX};
+
+WriteMakefile(@prefix,
+	      NAME => 'Envy',
+	      PREREQ_PM => { Test => 1 },
 	      EXE_FILES => [qw(envy.pl wrapper)],
-	      MAN1PODS => {}, #nobody reads it anyway
+	      MAN1PODS => {}, # MANPATH might be unset!
 	      MAN3PODS => {},
-	      PL_FILES => {'set_defaults.PL' => 'wrapper DB.pm etc/login/dot.profile etc/login/dot.login'},
+	      PL_FILES => {'set_defaults.PL' => join(' ', values %$subst_files) },
 	      VERSION_FROM => 'DB.IN',
-	      PM => {'Envy.pm' => '$(INST_LIBDIR)/Envy.pm',
+	      PM => {
+		     'Config.pm' => '$(INST_LIBDIR)/Envy/Config.pm',
 		     'Load.pm' => '$(INST_LIBDIR)/Envy/Load.pm',
 		     'DB.pm' => '$(INST_LIBDIR)/Envy/DB.pm',
-		     (map { ("etc/login/$_", "blib/etc/login/$_") } @dot),
+		     @test,
+		     (map { ("etc/login/$_", '$(INST_ETC)/login/'.$_) } @dot),
 		    },
-              'dist' => {COMPRESS=>'gzip -9f', SUFFIX => 'gz'},
 	      'macro' => {
-			  INST_ETC=> '$(INST_LIB)/../etc/login',
-			  INSTALLPRIVETC=> '$(INSTALLPRIVLIB)/../../etc/login',
+			  INST_ETC=> 'blib/etc',
+			  INSTALLPRIVETC=> '$(PREFIX)/etc',
 			 },
 	      );
 
-sub MY::installbin {
-    # Please fix envy_config!
-    die "Production perl ($production_perl) not found" if !-x $production_perl;
-    package MY;
-    my $inherited = shift->SUPER::installbin(@_);
-    package main;
-    $inherited =~ s/^(FIXIN).*(-MExt.*)$/$1 = $production_perl $2/m;
-    $inherited;
-}
-
 # hack ETC install
 sub MY::postamble {
+    require "./subst.pm";
     my ($self) = @_;
     my $str='';
 
     while (my($k,$v)=each %$subst_files) {
 	$str .= "
-$v :: $k".'
-	$(PERL) -I$(INST_ARCHLIB) -I$(INST_LIB) -I$(PERL_ARCHLIB) -I$(PERL_LIB) set_defaults.PL'."
-
-clean ::
-	-rm -f $v
-";
+$v :: $k set_defaults.PL".'
+	$(PERL) -I$(INST_ARCHLIB) -I$(INST_LIB) -I$(PERL_ARCHLIB) -I$(PERL_LIB) set_defaults.PL'."\n";
     }
-
+    $str .= "
+clean ::
+	rm -f ".join(' ', values %$subst_files)."\n";
+    
     $str .=
     q{
-clean ::
-	-rm -f t/*/accept t/*/diffs t/*/out
+
+set_defaults.PL :: Config.pm
 
 pure_site_install ::
 	}.$self->{NOECHO}.q{$(MOD_INSTALL) \

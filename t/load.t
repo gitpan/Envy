@@ -1,19 +1,19 @@
-#!./perl -w
+# -*-perl-*-
+use strict;
+use Test; plan test => 5;
+%ENV = (REGRESSION_ENVY_PATH => "./example/area1/etc/envy");
+require Envy::Load;
+ok 1;
 
-use Test;
-BEGIN { plan tests => 4 }
-use lib './t';
-use envy_tester;
+ok $ENV{ENVY_CONTEXT}, '/perl/';
 
-use Envy::Load qw(objstore reuters);
+Envy::Load->import('area1');
+ok $ENV{ETOP}, './example/area1';
 
-ok($ENV{OS_ROOTDIR} eq '/nw/dist/odi/os/5.0/sunpro' and
-   $ENV{SSLDIR} eq '/Vendor/products/ssl');
-
-ok(!defined $ENV{SYBASE});
 {
-    my $e = new Envy::Load();
-    $e->load('sybase');
-    ok($ENV{SYBASE} eq '/usr/sybase');
+    my $save = Envy::Load->new();
+    $save->load('cc-tools');
+    ok 0+(grep /ccs/, split(/:+/, $ENV{PATH} || '')), 1;
 }
-ok(!defined $ENV{SYBASE}) or warn $ENV{SYBASE};
+
+ok 0+(grep /ccs/, split(/:+/, $ENV{PATH} || '')), 0;

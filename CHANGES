@@ -1,3 +1,13 @@
+** 01-16-98 RELEASE 2.13
+
+- I've been waiting for the code to stabilize.  This release seems
+very stable so I am releasing it.  The csh support still needs to be
+brought up to date and better documentation is in the works.
+
+- Phased out support for backward-compatible envy state environment
+variables.
+
+
 ** 12-20-97 RELEASE 2.10
 
 - Envys that set ETOP are treated specially.  Only one should be

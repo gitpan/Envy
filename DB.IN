@@ -1,15 +1,19 @@
-#-*-perl-*-
+# ghostwheel dimension multiplexer a la -*-perl-*-
 
-package Envy::DB;
+# use 5.005;  ???
 use strict;
+package Envy::DB;
 use integer;
 use Carp;
 use Symbol;
 use Fcntl;
-use IO::File;
-use vars qw($VERSION $EVERSION $LOG $LOGIN);
+use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
+	    $LOGIN $Reloading $Context $Loop $Path);
+@ISA = ('Exporter');
+@EXPORT_OK = qw(@DefaultPath);
+$VERSION = '2.16';
 
-$VERSION = '2.15';
+umask 0;  # Figure out how to run setuid 'envy' XXX
 
 sub PATH() { 'ENVY_PATH' }
 sub STATE() { 'ENVY_STATE' }
@@ -19,419 +23,623 @@ sub CONTEXT() { 'ENVY_CONTEXT' }
 $EVERSION = 3;
 sub EVERSION() { 'ENVY_VERSION' }
 
-sub new {
-    croak "Envy::DB->new([env])" if @_ != 2;
+sub ERR() { 0 }
+sub WARN() { 1 }
+sub NOISY() { 2 }
+sub DEBUG() { 3 }
+
+# make all config variables available here? XXX
+
+if ($ENV{REGRESSION_ENVY_PATH}) {
+    @DefaultPath = split m/\s+/, $ENV{REGRESSION_ENVY_PATH};
+} else {
+    @DefaultPath = #SEARCH#
+}
+
+sub new { #PUBLIC
     my ($class, $env) = @_;
-    my $o = bless { fuzzy=>0, 'log'=>1 }, $class;
-    $o->reset($env) if $env;
+    my $o = bless {}, $class;
+    my %env = $env? %$env : ();
+    $o->{env} = \%env;
+    $o->{delta} = {};    # which variables have changed
+    $o->{'warn'} = [];   # warnings & error messages
+    $o->{log} = [];      # log entries
+    $o->{errors} = 0;
+    $o->{where} = $o->{env}{ &CONTEXT } || 'shell';
+
+    # MAKE SURE WE HAVE THE DEFAULT ENVY_PATH...
+    my $fixed=0;
+    my %old;
+    my @path = split /:+/, $o->{env}{&PATH} || '';
+    for (@path) { $old{$_} = 1 }
+    for my $dir (@DefaultPath) {
+	next if exists $old{$dir};
+	push @path, $dir;
+	$fixed=1;
+    }
+    if ($fixed) {
+	$o->{env}{&PATH} = join ':', @path;
+	$o->{delta}{&PATH} = 1;
+    }
+
     $o;
 }
 
-sub fuzzy {
-    my ($o, $yes) = @_;
-    $o->{fuzzy} = $yes if @_ == 2;
-    $o->{fuzzy};
-}
+# ---------------------------------------------------------------
 
-sub do_log {
-    my ($o, $yes) = @_;
-    $o->{'log'} = $yes if @_ == 2;
-    $o->{'log'};
-}
-
-sub debug {
-    my ($o, $yes) = @_;
-    $o->{'debug'} = $yes if defined $yes;
-    $o->{'debug'};
-}
-
-sub reset {
-    my ($o, $env) = @_;
-    $o->{delta} = {};
-    my %env = %$env;
-    $o->{env} = \%env;
-    $o->{etop} = $o->{env}{ETOP} || '';
-    for (&PATH, &STATE, &DIMENSION) { $o->{env}{$_} ||= ''; }
-    $o->{'warn'} ||= [];
-}
-
-sub _warn {
+sub w {
     my $o = shift;
+    my $level = shift;
     my $w = join('', @_);
-    $w .= "\n" if $w !~ m/\n$/;
-    push(@{$o->{'warn'}}, $w);
+    $w .= $Context if $w !~ m/\n$/s;
+    $w .= "\n" if $w !~ m/\n$/s;
+    push @{$o->{'warn'}}, [$level, $w];
+    ++$o->{errors} if $level == ERR;
+    0
 }
 
+# help cope with backward compatibility
 sub version {
     my ($o) = @_;
     $o->{env}{&EVERSION} || $EVERSION;
 }
 
-sub strip_base {
+# ---------------------------------------------------------------
+
+sub search_envy_path { #PRIVATE
+    my ($o) = @_;
+    $o->{fullpath} = {};
+    $o->{shadowed} = {};
+
+    my %PATH;
+    my $add_path  = sub {
+	my ($o, $p) = @_;
+	
+	return if exists $PATH{$p};
+	$PATH{$p}=1;
+	$o->w(DEBUG,"Reading $p...\n");
+	
+	my $dh = gensym;
+	opendir($dh, $p) or return $o->w(DEBUG,"Directory '$p' not readable.\n");
+	for my $m (readdir($dh)) {
+	    next if $m !~ m/\.(mo|env)$/;
+	    next if -d "$p/$m";
+	    
+	    if ($m =~ /[,\s]/) {
+		$o->w(WARN, "Envy found containing commas '$p/$m' (ignored).\n");
+		next;
+	    }
+	    $o->w(WARN, "Envy '$p/$m' should have .env suffix (ignored).\n")
+		if $m !~ m/\.env$/;
+	    
+	    my $file = $m;
+	    $m =~ s/\.(mo|env)$//;
+	    if ($m =~ m/^\d$/) {
+		$o->w(WARN, "Envy: '$p/$m' single digits are reserved\n");
+		next;
+	    }
+	    if (!exists $o->{fullpath}{$m}) {
+		$o->w(DEBUG,"\t$m=$p/$file\n");
+		$o->{fullpath}{$m} = "$p/$file";
+	    } else {
+		push @{ $o->{shadowed}{$m} }, "$p/$file";
+	    }
+	}
+	closedir($dh);
+    };
+    
+    my @add = split /:+/, $o->{env}{&PATH};
+    if (exists $o->{env}{'HOME'} and -d $o->{env}{'HOME'}."/.envy") {
+	unshift @add, $o->{env}{'HOME'}."/.envy";
+    }
+    for my $p (@add) {
+	$add_path->($o, $p);
+	if (-d "$p/.priv") {
+	    $add_path->($o, "$p/.priv")
+	} elsif (-d "$p/.private") {
+	    $o->w(WARN, "$p/.private should be renamed to $p/.priv\n");
+	    $add_path->($o, "$p/.private");
+	}
+    }
+}
+
+sub get_fullpath {
+    my ($o, $mo) = @_;
+    $o->search_envy_path() if !exists $o->{fullpath};
+    if (!defined $mo) {
+	$o->{fullpath}
+    } else {
+	return if !exists $o->{fullpath}{$mo};
+	$o->{fullpath}{$mo}
+    }
+}
+
+# ---------------------------------------------------------------
+
+# HOW ENVY_STATE WORKS:
+#
+# 0      - the first envy loaded
+# 1      - top level (implicit dependency on first envy)
+# <envy> - explicit dependency
+# 2      - required by multiple envys
+
+sub cache_state { #PRIVATE
+    my ($o) = @_;
+
+    my %loaded;
+    for my $m (split /:+/, $o->{env}{&STATE} || '') {
+	my ($k,$v) = split /,/, $m;
+	$v = '0' if $v eq 'STARTUP';
+	$loaded{$k}=$v;
+    }
+    $o->{loaded} = \%loaded;
+
+    my %dimen = map { split /,/ } split /:+/, $o->{env}{&DIMENSION} || '';
+    $o->{dimen} = \%dimen;
+    $o->{first} = $o->{dimen}{First};
+}
+
+sub is_loaded {
+    my ($o, $m) = @_;
+    $o->cache_state() if !exists $o->{loaded};
+    exists $o->{loaded}{$m};
+}
+
+sub is_unloaded {
+    my ($o, $m) = @_;
+    $o->cache_state() if !exists $o->{loaded};
+    ! exists $o->{loaded}{$m};
+}
+
+sub is_first {
+    if (@_ == 1) {
+	my ($o) = @_;
+	(keys %{$o->{loaded}}) == 0
+    } elsif (@_ == 2) {
+	my ($o, $mo) = @_;
+	my $f = $o->{dimen}{First};
+	$f && $f eq $mo
+    }
+}
+
+sub loaded_by {
+    my ($o, $by) = @_;
+    $o->cache_state if !exists $o->{loaded};
+    my $loaded = $o->{loaded};
+    my @m;
+    for my $mo (keys %$loaded) { push @m, $mo if $$loaded{$mo} eq $by }
+    @m
+}
+
+sub set_loaded { #PRIVATE
+    my ($o, $mo, $by) = @_;
+    my $l = $o->{loaded};
+    if ($o->is_first($mo)) {
+	$l->{$mo} = '0';
+    }
+    elsif (!exists $l->{$mo}) {
+	$l->{$mo} = $by;
+    }
+    elsif ($l->{$mo} !~ m/^\d$/ and $l->{$mo} ne $by) {
+	$o->w(NOISY, "Envy '$mo' load by '$l->{$mo}' and now by '$by'");
+	$l->{$mo} = '2';
+    }
+}
+
+sub set_unloaded { #PRIVATE
+    my ($o, $mo) = @_;
+    delete $o->{loaded}{$mo}
+}
+
+sub nav_dimension { #PRIVATE
+    my ($o, $reverse, $di, $by) = @_;
+    my $old = $o->{dimen}{$di};
+    if (!$reverse) {
+	if ($o->is_first) {
+	    $o->w(WARN, "Envy '$by' should use dimension 'First' instead of '$di'")
+		if $di ne 'First';
+	}
+	elsif ($old and $old ne $by) {
+	    $o->w(NOISY, "Swapping $di from '$old'");
+	    $o->process_envy(1, $old, '1');
+	}
+	$o->{dimen}{$di} = $by;
+	if ($di eq 'First') {
+	    $o->{first} ||= $by;
+	    $o->unload_all()
+		if $o->{first} ne $by;
+	}
+
+    } else {
+	$o->w(WARN, "Envy '$by' opening $di (was $old)")
+	    if $old ne $by;
+	$o->{dimen}{$di} = undef;
+    }
+}
+
+sub depends_on {
+    my ($o, $mo) = @_;
+    $o->cache_state if !exists $o->{loaded};
+    exists $o->{loaded}{$mo} and $o->{loaded}{$mo}
+}
+
+sub save_state { #PRIVATE
+    my ($o) = @_;
+    confess "save_state" if !exists $o->{loaded};
+
+    # ENVY_PATH is adjusted like other variables; it does not concern us here
+
+    my $dim = $o->{dimen};
+    my @new = (&EVERSION => $EVERSION,
+	       &STATE => join(':', map {"$_,$o->{loaded}{$_}"} sort
+			      keys %{$o->{loaded}}),
+	       &DIMENSION => join(':', map {"$_,$o->{dimen}{$_}"} sort
+				  grep { defined $dim->{$_} } keys %$dim));
+    while (@new) {
+	my ($k,$v) = splice @new, -2;
+	if (($o->{env}{$k} || '') ne $v) {
+	    $o->{env}{$k} = $v;
+	    $o->{delta}{$k} = 1;
+	}
+    }
+}
+
+# ---------------------------------------------------------------
+
+sub catalogue {
+    # read everything; get descriptions, dependencies, etc
+    #
+    # populate $o->{dimen}
+    #
+    # create $o->{info}{envy}
+    #   {desc} = 'the description'
+    #   {dimen} = dimension
+    #   {requires} = [...]
+    #
+    # Sounds good?
+}
+
+# ---------------------------------------------------------------
+
+sub tree_top {
     my ($base) = @_;
-    $base =~ s,/mo/.+?\.(mo|env)$,,;
-    $base =~ s,/etc/envy/.+?\.(mo|env)$,,;
+    $base =~ s,/etc/envy/.+?\.(mo|env)$,, or
+	$base =~ s,/mo/.+?\.(mo|env)$,, or
+	    $base =~ s,/.+?\.(mo|env)$,,;
     $base;
 }
 
-sub _subst {
-    my ($o, $str, $base, $context) = @_;
+sub interpolate {
+    my ($o, $qx, $str) = @_;
     my $subst = sub {
 	my $var = shift;
 	$var =~ tr [{}] []d;
 	if ($var eq 'MODULE_BASE' or $var eq 'modulebase' or
 	    $var eq 'ENVY_LINKBASE') {
-	    $o->_warn("$var is depreciated".$context)
+	    $o->w(WARN,"$var is depreciated")
 		if $var =~ /module/i;
-	    return strip_base($base);
+	    return tree_top($Path);
 	} elsif ($var eq 'MODULE_REALBASE' or $var eq 'ENVY_BASE') {
-	    $o->_warn("$var is depreciated".$context)
+	    $o->w(WARN,"$var is depreciated")
 		if $var =~ /module/i;
-	    my $rbase = $base;
+	    my $rbase = $Path;
 	    while (-l $rbase) {
 		$rbase = readlink($rbase) or die "readlink $rbase";
 	    }
-	    return strip_base($rbase);
+	    return tree_top($rbase);
 	}
-	do { $o->_warn("Variable '$var' not set".$context); return '' } if
+	return $o->w(WARN,"Variable '$var' not set"), '' if
 	    !defined $o->{env}{$var};
 	$o->{env}{$var};
     };
+    # need to do real lexical analysis XXX
+    if($str =~ /^\'(.*)\'$/){
+	return $1;
+    }
+    if($str =~ /^\`(.*)\`$/){
+	return `$1`;
+    }
     while ($str =~ s/
 	   \$ (
-	       (:? \{[\w\d_-]+\} ) |
-	       (:?   [\w\d_-]+   )
+	       (:? \{[\w-]+\} ) |
+	       (:?   [\w-]+   )
 	       )
 	   /&$subst($1)/exg) {};
     $str;
 }
 
-sub add_path {
-    my ($o, $p) = @_;
-    return if $o->{path}{$p};
-    $o->{path}{$p} = 1;
-    $o->_warn("Reading $p...") if $o->debug;
-    my $dh = gensym;
-    opendir($dh, $p) or do {
-#	$o->_warn("Could not read directory '$p' (warning).");
-	return;
-    };
-    for my $m (readdir($dh)) {
-	next if ($m =~ /^\.+$/ or -d "$p/$m");
-	if ($m =~ /[,\s]/)
-	{ $o->_warn("Envy found containing commas '$p/$m' (ignored)."); next; }
-	if ($m !~ /\.(mo|env)$/) {
-	    if ($p =~ m,etc/envy, and $m !~ m/\.env$/) {
-		$o->_warn("Envy with bad suffix '$p/$m'.");
-	    }
-	    next;
-	}
-
-	my $file = $m;
-	$m =~ s/\.(mo|env)$//;
-	next if defined $o->{cache}{$m};
-	$o->_warn("\t$m=$p/$file") if $o->debug;
-	$o->{cache}{$m} = "$p/$file";
+sub edit_key {
+    my ($o, $k) = @_;
+    if ($k eq 'MODULE_PATH') {
+	$o->w(WARN,"'$k' is depreciated; use ".&PATH);
+	$k = &PATH;
     }
-    closedir($dh);
-}
-
-sub cache_path {
-    my ($o) = @_;
-    return if $o->{cache};
-    confess "cache_state before cache_path" if exists $o->{state};
-    $o->{cache} = {};
-
-    my $path;
-    $path = $o->{env}{&PATH} || '';
-
-    my @default;
-    if ($ENV{REGRESSION_PATH}) {
-	@default = split(m/\s+/, $ENV{REGRESSION_PATH});
-    } else {
-	@default = #SEARCH#;
-    }
-
-    my @to_add = (split(/:+/, $path), @default);
-    if ($o->{env}{'HOME'} and -d $o->{env}{'HOME'}."/.envy") {
-	unshift(@to_add, $o->{env}{'HOME'}."/.envy");
-    }
-    for my $p (@to_add) {
-	$o->add_path($p);
-    }
-}
-
-=head1 ENVY STATE
-
-STARTUP - set ETOP on login
-1 - top level
-<envy> - depends on given envy
-2 - required by multiple envys
-
-=cut
-
-sub cache_state {
-    my ($o) = @_;
-    return if exists $o->{state};
-    my %state;
-    my %dimen;
-
-    for my $m (split(/:+/, $o->{env}{&STATE})) {
-	my ($k,$v) = split(/,/, $m);
-	$state{$k}=$v;
-    }
-    %dimen = map { split(/,/) } split(/:+/, $o->{env}{&DIMENSION});
-    
-    $o->{dimen} = \%dimen;
-    $o->{state} = \%state;
-}
-
-sub write_state {
-    my ($o) = @_;
-    confess "write_state of nothing" if (!$o->{state} or !$o->{dimen});
-
-    # PATH is adjusted like other variables, except that removal
-    # from PATH is skipped via a special case.
-
-    # current version
-    $o->{env}{&EVERSION} = $EVERSION;
-    $o->{env}{&STATE} =
-	join(':',map {"$_,$o->{state}{$_}"} sort keys %{$o->{state}});
-    $o->{env}{&DIMENSION} =
-	join(':',map {"$_,$o->{dimen}{$_}"} sort keys %{$o->{dimen}});
-    for (&STATE, &DIMENSION, &EVERSION) { $o->{delta}{$_} = 1; }
-
-    # cleanup
-    delete $o->{state};
-    delete $o->{dimen};
-}
-
-sub can_edit {
-    my ($o, $k, $ctx) = @_;
-    do { $o->_warn("Variable '$k' is not alpha-numeric".$ctx); return 0} if
-	$k !~ /[\w\d_-]+/;
-    do { $o->_warn("Naughty naughty, $k is private".$ctx); return 0} if
-	($k eq &STATE or $k eq &DIMENSION);
+    return $o->w(WARN,"Variable '$k' is not alpha-numeric") if
+	$k !~ /^[\w-]+$/;
+    return $o->w(WARN,"Naughty naughty, '$k' is private") if
+	($k eq &STATE or $k eq &DIMENSION or
+	 $k eq 'ENVY_BASE' or $k eq 'ENVY_LINKBASE');
     $o->{delta}{$k}=1;
-    1;
+    $k;
 }
 
-sub is_unloaded {
-    my ($o, $m) = @_;
-    $o->cache_state();
-    ! $o->{state}{$m};
-}
-
-sub do_envy {
-    my ($o, $mo, $reverse) = @_;
-    $o->cache_path();
-    $o->cache_state();
-    $o->{context} = $o->{env}{ &CONTEXT } || 'shell';
-    $o->_warn("Envy: non-interactive fuzzy match used to load '$mo'.\n  Please switch to 'envy load $mo' instead of just 'envy $mo'!\n")
-	if $o->{context} ne 'shell' && $o->fuzzy;
-    if ($reverse and ($o->{state}{$mo} || '') eq 'STARTUP') {
-	warn "Envy: unloading '$mo' would cause envy itself to be unloaded!\n  Please try 'envy unload' instead.\n";
-	exit 1;
+sub assign {
+    my ($o, $reverse, $k, $force, $v) = @_;
+    $k = $o->edit_key($k);
+    return if !$k;
+    return $o->w(ERR,"Variable '$k' must be edited with +=")
+	if ($k eq 'PATH' or $k eq 'MANPATH' or $k eq &PATH);
+    if (!$reverse) {
+	$o->w(NOISY,"Variable '$k' redefined") if
+	    (!$force and exists $o->{env}{$k} and !$Reloading);
+	$o->{env}{$k} = $o->interpolate(1,$v);
     }
-    _exe($o, $reverse, $mo,
-	 " while ".($reverse?"un":"")."loading envy '$mo'.\n", '1', 0);
-    $o->write_state();
+    else {
+	delete $o->{env}{$k};
+    }
 }
 
-sub unload_all {
-    my ($o) = @_;
-    for my $phase (1..2) {
-	for my $m ($o->to_unload($phase)) {
-	    $o->do_envy($m, 1) if !$o->is_unloaded($m);
+sub rejoin {
+    my ($o, $reverse, $k, $prepend, $sep, $v) = @_;
+    $k = $o->edit_key($k);
+    return if !$k;
+
+    # SPECIAL CASES:
+    #
+    # PATH      - don't remove ourselves from the path
+    #             '.' is always kept first if it is seen
+    #             if switching to a new envy.pl:
+    #                abort subsequent loads
+    #
+    # ENVY_PATH - never remove components
+    #             rescan all directories for .env files
+
+    # fetch old list
+    my @old = split /$sep+/, $o->{env}{$k} if defined $o->{env}{$k};
+    my %old; for (@old) { $old{$_}=1; }
+    
+    # fetch delta
+    my @delta = split /$sep+/, $o->interpolate(0,$v);
+    my %delta; for (@delta) { $delta{$_}=1 }
+    
+    # filter @old with @delta -> @now
+    my @now;
+    if ($k eq &PATH) {
+	if (!$reverse) {
+	    push @now, @delta if $prepend;
+	    for my $p (@old) { push @now, $p if !exists $delta{$p} }
+	    push @now, @delta if !$prepend;
 	}
     }
+    elsif ($k eq 'PATH') {
+	my $has_dot = exists $old{'.'};
+	push @now, @delta if $prepend && !$reverse;
+	
+	for my $p (@old) {
+	    if (!$reverse and exists $delta{$p} and $p ne '.') {
+		$o->w(NOISY, "Component '$p' added to '$k' again")
+		    if !$Reloading;
+		next
+	    }
+	    next if delete $delta{$p} || $p eq '.';
+	    push @now, $p;
+	}
+
+	push @now, @delta if !$prepend && !$reverse;
+	unshift @now, '.' if $has_dot; # once sloppy; keep sloppy
+    }
+    else {
+	push @now, @delta if $prepend && !$reverse;
+	for my $p (@old) {
+	    if (!$reverse and exists $delta{$p}) {
+		$o->w(NOISY, "Component '$p' added to '$k' again")
+		    if !$Reloading;
+		next
+	    }
+	    next if delete $delta{$p};
+	    push @now, $p;
+	}
+	push @now, @delta if !$prepend && !$reverse;
+    }
+
+    $o->{env}{$k} = join $sep, @now;
+    $o->search_envy_path() if $k eq &PATH;
 }
 
-sub _exe {
-    my ($o, $reverse, $mo, $context, $prior, $loop) = @_;
-    ++$loop;
-    confess $o if @_ != 6;
+sub process_envy { #PRIVATE
+    my ($o, $reverse, $mo, $prior) = @_;
+    confess $o if @_ != 4;
 
-    do { $o->_warn("Can't find envy '$mo'".$context); return; } if
-	!defined $o->{cache}{$mo};
-    do { $o->_warn("Envy '$mo' is already unloaded".$context); return; } if
-	$reverse && $o->is_unloaded($mo);
-    do { $o->_warn("Recursive reloading detected".$context); return;} if $loop>100;
+    return if $o->{errors} > 5;
+    return $o->w(WARN, "Dimension 'First' changed from '$o->{first}'; must restart envy")
+	if !$reverse && $o->{first} && !$o->is_first($o->{first});
 
-    $o->unload_all() if $reverse and $o->{state}{$mo} eq 'STARTUP';
+    local $Path = $o->get_fullpath($mo);
+    return $o->w(ERR,"Can't find envy '$mo'")
+	if !$Path;
+    local $Loop = $Loop+1;
+    return $o->w(ERR,"Recursive reloading detected")
+	if $Loop>100;
+    $o->w(WARN,"Envy '$mo' is already unloaded")
+	if $reverse && $o->is_unloaded($mo);
 
-    my $base = (my $path = $o->{cache}{$mo});
-    $o->{etop} ||= $o->{env}{ETOP};
-    my $etop_set=0;
-
-    my @file;
+    local $Reloading = !$reverse && $o->is_loaded($mo);
+    my @L;
     {
-	my $fh = new IO::File;
-	$fh->open($path) or
-	    do { $o->_warn("Envy '$mo' ($path) is not readable."); return };
-	@file = $reverse? reverse <$fh> : <$fh>;
+	my $fh = gensym;
+	open($fh, $Path) or
+	    return $o->w(ERR,"Envy '$mo' ($Path) is not readable.");
+	@L = <$fh>;
+	close $fh;
     }
-    my $first=1;
-    for (my $line=1; $line <= @file; $line++) {
-	my $l = $file[$line-1];
-	$l =~ s/\s*\#.*$//;
-	next if $l =~ /^\s*$/;
-	my $ctx = " at envy '$mo' line $line\n\t".$context;
+    my $seen_stuff=0;
+    my $prechange = sub {
+	return if $seen_stuff;
+	$seen_stuff = 1;
+	if (!$reverse and $o->is_first and !$o->is_first($mo)) {
+	    $o->w(WARN, "Envy '$mo' should use dimension 'First'");
+	    $o->nav_dimension($reverse, 'First', $mo);
+	}
+    };
+    my $doline = sub {
+	my $line = shift;
+	my $l = $L[$line-1];
 
-	if ($l =~ /^require\s+(\S+)/) {
-	    $first=0;
-	    my $str = $o->_subst($1, $base, $ctx);
-	    $o->_warn("Inappropriate whitespace detected".$context)
-		if $str =~ /\s/;
-	    if (!$reverse or ($reverse and (!exists $o->{state}{$str} or 
-					    $o->{state}{$str} ne '2'))) {
-		$o->_exe($reverse, $str, $ctx, $mo, $loop);
+	# need a real lexer; '#' cannot be hidden by quoting! XXX
+	# get rid of comment lines & trailing whitespace
+	$l =~ s/ \s* (\#.*)? $//sx;
+	return if !length $l;
+
+	local $Context = " at envy '$mo' line $line\n\t".$Context;
+
+	if ($l =~ /^(alpha|beta|depreciated)$/) {
+	    $o->w(WARN,"Envy '$mo' is ".uc($1).", use at your own risk")
+		if !$reverse;
+	    
+	} elsif ($l =~ s/^dimension\s+//) {
+	    # allow multiple dimensions? variable substitution? XXX
+	    return $o->w(ERR, "Dimensions must be declared firstly")
+		if $seen_stuff && !$reverse;
+	    return $o->w(ERR, "Bad dimension name '$l'")
+		if $l !~ m/^[\w-]+$/;
+	    $o->nav_dimension($reverse, $l, $mo);
+
+	} elsif ($l =~ m/^require\s+Envy\s+([\d\.]+)$/) {
+	    my $v = $1;
+	    return $o->w(ERR, "Envy '$mo' requires envy $v")
+		if $v > $VERSION;
+
+	} elsif ($l =~ s/^require\s+//) {
+	    $prechange->();
+	    my $str = $o->interpolate(0,$l);
+	    return $o->w(ERR,"Bad characters in require '$str'")
+		if $str !~ /^[\w-.]+$/;
+	    if (!$reverse == !$o->is_loaded($str)) {
+		$o->process_envy($reverse, $str, $mo);
+	    } elsif (!$reverse) {
+		$o->set_loaded($str, $mo);
 	    }
 
-	} elsif ($l =~ /^depreciated$/) {
-	    $o->_warn("Envy '$mo' is DEPRECIATED".$context)
+	} elsif ($l =~ s/^desc(ription)?\s//) {
+	    # save somewhere XXX
+
+	} elsif ($l =~ s/^(echo|error)\s?//) {
+	    $o->w($1 eq 'echo'? WARN : ERR, $o->interpolate(1,$l)."\n")
 		if !$reverse;
 
-	} elsif ($l =~ /^dimension\s+(\S+)\s*$/) {
-	    my $di = $1;
-	    if ($reverse) {
-		delete $o->{dimen}{$di};
-	    } else {
-		die "Dimensions must be listed first".$context if !$first;
-		if (exists $o->{dimen}{$di} and $o->{dimen}{$di} ne $mo) {
-		    $o->_warn("Swapping $di from '$o->{dimen}{$di}'".$context);
-		    $o->_exe(1,$o->{dimen}{$di}, $ctx, $mo, $loop);
-		}
-		$o->{dimen}{$di} = $mo;
-	    }
+	} elsif ($l =~ /^([\w-]+) (:)?= (.*)$/x) {
+	    $prechange->();
+	    $o->assign($reverse, $1,$2,$3);
 
-	} elsif ($l =~ /^echo\s(.*)$/) {
-	    my $str = $o->_subst($1, $base, $ctx);
-	    $str .= "\n" if $str !~ m,\n$,;
-	    $o->_warn($str) if !$reverse && $o->{context} eq 'shell';
-
-	} elsif ($l =~ /^([^=+]+)=(.*)$/) {
-	    $first=0;
-	    my ($k,$v) = ($1,$2);
-	    next if !$o->can_edit($k, $ctx);
-	    do {$o->_warn("Variable '$k' must be edited with +=".$ctx);next} if
-		($k eq 'PATH' or $k eq 'MANPATH' or $k eq &PATH);
-
-	    if ($reverse) {
-		delete $o->{env}{$k};
-	    } else {
-		do {$o->_warn("Variable '$k' redefined".$ctx) } if
-		    (exists $o->{env}{$k} and !exists $o->{state}{$mo});
-		$o->{env}{$k} = $o->_subst($v, $base, $ctx);
-		++$etop_set if $k eq 'ETOP';
-	    }
-
-	} elsif ($l =~ /^([^=+]+)\+\=(.*)$/) {
-	    $first=0;
-	    my ($k,$v) = ($1,$2);
-	    if ($k eq 'MODULE_PATH') {
-		$o->_warn("$k is depreciated".$ctx);
-		$k = &PATH;
-	    }
-	    next if !$o->can_edit($k, $ctx);
-	    my $vsubst = $o->_subst($v, $base, $ctx);
-	    $o->_warn("Inappropriate whitespace detected".$context)
-		if $vsubst =~ /\s/;
-
-	    # fetch delta
-	    my @delta = split(/:+/, $vsubst);
-	    my %delta;
-	    for (@delta) { $delta{$_}=1 }
-	    $delta{'.'}=1 if $k eq 'PATH';
-
-	    # fetch old list
-	    my @old = defined $o->{env}{$k}? split(/:+/, $o->{env}{$k}) : ();
-	    my %old;
-	    for (@old) { $old{$_}=1; }
-	    my $has_dot = exists $old{'.'};
-
-	    # filter @old with @delta -> @now
-	    my @now=();
-	    for my $e (@old) {
-		if (!$reverse and exists $old{$e} and exists $delta{$e}
-		    and $e ne '.') {
-		    $o->_warn("Component '$e' added to '$k' again".$ctx)
-			if !exists $o->{state}{$mo} && $k ne &PATH;
-		}
-		if (exists $delta{$e}) { delete $delta{$e}; next; }
-		push(@now, $e);
-	    }
-	    if (!$reverse or $k eq &PATH) {
-		# add @delta back
-		for my $z (reverse @delta) {
-		    $o->add_path($z) if $k eq &PATH;
-		    if ($reverse) { push(@now, $z) }
-		    else { unshift(@now, $z); }
-		}
-	    }
-	    unshift(@now, '.') if $k eq 'PATH' && $has_dot;
-	    $o->{env}{$k} = join(':', @now);
+	} elsif ($l =~ /^([\w-]+) (\+\=|\=\+) (.*)$/x) {
+	    $prechange->();
+	    $o->rejoin($reverse, $1, $2 eq '+=', ':', $3);
 
 	} else {
-	    $o->_warn("Inexplicable ignored: $l".$ctx);
+	    # maybe a newer version of envy knows about new tokens...
+	    $o->w(NOISY, "Inexplicable ignored: '$l'");
 	}
-    }
-    if ($reverse) { 
-	delete $o->{state}{$mo};
+    };
+
+    if (!$reverse) {
+	for (my $line_no = 1; $line_no <= @L; $line_no++) {
+	    $doline->($line_no);
+	    last if $o->{errors} > 5;
+	}
     } else {
-	$prior = 'STARTUP' if $prior eq '1'&& exists $o->{env}{ETOP} && $etop_set;
-	my $cur = $o->{state}{$mo};
-	if ($cur and $cur !~ m/^\d+$/ and $prior ne '1' and $cur ne $prior) {
-	    # dependency conflict - set to phase 2 for unload all
-	    $o->{state}{$mo}='2';
-	    $o->_warn("Envy '$mo' also loaded by '$cur'".$context)
-	} elsif (!$cur) {
-	    $o->{state}{$mo}=$prior;
+	for (my $line_no = @L; $line_no >= 1; $line_no--) {
+	    $doline->($line_no);
+	    last if $o->{errors} > 5;
 	}
     }
-    if ($o->do_log() and $o->{etop}) {
-	$LOGIN ||= getlogin || getpwuid($<) || "?";
-	my $file = $o->{etop} . "/var/envy.log";
-	if (!$LOG) {
-	    $LOG = new IO::File;
-	    $LOG->open($file, &O_WRONLY| &O_APPEND| &O_CREAT, 0666) 
-		or warn "envy: open $file: $!";
+
+    if ($reverse) {
+	$o->set_unloaded($mo);
+    } else {
+	$o->set_loaded($mo, $prior);
+    }
+
+    $LOGIN ||= getlogin || getpwuid($<) || "?";
+    push @{$o->{log}}, { when => time(), who => $LOGIN,
+			 action => ($reverse?'un':'').'load', what => $mo };
+}
+
+# ---------------------------------------------------------------
+
+sub check_fuzzy { #PUBLIC
+    my ($o, $mo) = @_;
+    $o->w(WARN,"Envy: non-interactive fuzzy match used to load '$mo'.\n  Please use 'envy load $mo' instead of just 'envy $mo'!\n")
+	if $o->{where} ne 'shell';
+}
+
+sub unload_all { #PUBLIC
+    my ($o) = @_;
+    $Loop = 0;
+    $Context = " while unloading everything.\n";
+    for my $phase (1..2) {
+	for my $m ($o->loaded_by($phase)) {
+	    $o->process_envy(1, $m, $phase) if !$o->is_unloaded($m);
 	}
-	$LOG->print(join("\t", scalar(localtime), $LOGIN, $o->{context},
-			 ($reverse? 'un':'').'load', $mo)."\n")
-	    if $LOG->opened;
     }
 }
 
-sub warnings {
-    my ($o) = @_;
-    @{$o->{'warn'}};
+sub do_envy { #PUBLIC
+    carp "depreciated";
+    my ($o, $mo, $rev) = @_;
+    $o->envy($rev, $mo);
 }
 
-sub to_sync {
-    my ($o) = @_;
-    sort {$a->[0] cmp $b->[0]} map { [$_,$o->{env}{$_}] } keys(%{$o->{delta}});
-}
-
-sub to_unload {
-    my ($o, $phase) = @_;
-    $o->cache_state;
-    my @loaded;
-    for my $mo (keys %{$o->{state}}) {
-	push(@loaded, $mo) if $o->{state}{$mo} eq $phase;
+sub envy { #PUBLIC
+    my ($o, $reverse, $mo) = @_;
+    if ($reverse and $o->is_first($mo)) {
+	$o->unload_all();
+    } else {
+	$Loop = 0;
+	$Context = " while ".($reverse?"un":"")."loading envy '$mo'.\n";
+	$o->process_envy($reverse, $mo, '1');
     }
-    @loaded;
 }
 
-sub status {
+sub write_log { #PUBLIC
     my ($o) = @_;
-    $o->cache_path();
-    $o->cache_state;
-    my @loaded;
-    for my $mo (keys %{$o->{state}}) {
-	push(@loaded, $mo) if $o->{state}{$mo};
+    require FindBin;
+    my $file = "$FindBin::Bin/../var/envy.log";
+    my @stat = stat($file);
+    if (@stat and $stat[7] > 1024 * 256) {
+	$o->w(WARN, "envy: rename $file $file.old: $!\n")
+	    if !rename $file, "$file.old";
     }
-    ($o->{cache},\@loaded);
+    my $LOG = gensym;
+    sysopen($LOG, $file, &O_WRONLY| &O_APPEND| &O_CREAT, 0666) or
+	return $o->w(NOISY, "envy: open $file: $!");
+    for my $e (@{$o->{log}}) {
+	print $LOG (join("\t", scalar localtime($e->{when}),
+			 $e->{who}, $o->{where}, $e->{action}, $e->{what})."\n");
+    }
+}
+
+sub warnings { #PUBLIC
+    my ($o, $level) = @_;
+    my $all = $o->{warn};
+    $o->{warn} = [];
+    $level = 1 if !defined $level;
+    map { $_->[1] } grep { $_->[0] <= $level } @$all;
+}
+
+sub to_sync { #PUBLIC
+    my ($o) = @_;
+    return if $o->{errors};
+    $o->save_state();
+    my $delta = $o->{delta};
+    $o->{delta} = {};
+    sort {$a->[0] cmp $b->[0]} map { [$_,$o->{env}{$_}] } keys %$delta;
+}
+
+sub status { #PUBLIC
+    my ($o) = @_;
+    $o->cache_state if !exists $o->{loaded};
+    my @loaded = keys %{$o->{loaded}};
+    ($o->get_fullpath(),\@loaded);
 }
 
 1;

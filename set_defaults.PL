@@ -1,8 +1,12 @@
 #!./perl
 
 use strict;
-use lib '.';
-use envy_config;
+use Config;
+BEGIN {
+    require "./subst.pm";
+    require "./Config.pm";
+    Envy::Config->import(qw($prefix $init_env $default_path $envy $default_startup));
+}
 use IO::File;
 
 sub do_init_env {
@@ -38,11 +42,16 @@ while (my($k,$v) = each %$symlink) {
     }
 }
 
-my $subst = {'#SEARCH#' => $default_envy_path,
-	     '#ENVY.PL#' => $production_envy,
+my $perl5lib = $Config{sitelib};
+$perl5lib =~ s/$Config{prefix}/$prefix/;
+
+my $subst = {'#SEARCH#' => $default_path,
+	     '#STARTUP#' => $default_startup,
+	     '#ENVY.PL#' => $envy,
 	     '#INITIAL_ENV#' => \&do_init_env,
 	     '#SAFE_SYMLINK#' => $symlink_str,
-	     '#ETOP#' => $ETOP,
+	     '#ETOP#' => $prefix,
+	     '#PERL5LIB#' => $perl5lib,
 	    };
 
 sub go {

@@ -1,48 +1,37 @@
-#!/usr/local/bin/perl -w
-use FindBin;
-use Cwd;
-use vars qw($running_under_some_shell);
-
-# We need to be extra careful to make sure envy.pl picks-up the right
-# version of Envy::DB.
-
-eval { require "$FindBin::Bin/../lib/perl5/site_perl/Envy/DB.pm" }
-  if !defined $ {"Envy::DB::VERSION"};
-eval { require "$FindBin::Bin/../lib/Envy/DB.pm" } #blib
-  if !defined $ {"Envy::DB::VERSION"};
-eval { require Envy::DB }
-  if !defined $ {"Envy::DB::VERSION"};
-
-die "Can't find Envy::DB: $@"
-  if !defined $ {"Envy::DB::VERSION"};
-
+#!/nw/dist/prod/bin/perl -w
 use strict;
+use vars qw($running_under_some_shell);
+use Envy::DB qw(@DefaultPath);
 
+# If you want to reuse any of the code in this file, let me
+# know and I'll move it to Envy::UI or somesuch.
+
+my $warnlevel = 1;
 my $is_csh=0;
-my $debug=0;
 my $is_showing=0;
 
 sub sync_env {
     my ($db) = @_;
-    for ($db->warnings) { print }
+    for ($db->warnings($warnlevel)) { print }
+    $db->write_log if !$is_showing;
     my $old = select STDOUT if !$is_showing;
     for my $z ($db->to_sync()) {
 	my ($k,$v) = @$z;
 	if (defined $v) {
 	    if ($is_csh) {
-		print "setenv $k $v\n";
+		print "setenv $k $v;\n";
 	    } else {
-		print "$k=$v ; export $k\n";
+		print "$k=$v; export $k;\n";
 	    }
 	} else {
 	    if ($is_csh) {
-		print "unsetenv $k\n";
+		print "unsetenv $k;\n";
 	    } else {
-		print "unset $k\n";
+		print "unset $k;\n";
 	    }
 	}
     }
-    select $old if !$is_showing;
+    select $old if $old;
 }
 
 sub cmd_2re {
@@ -55,14 +44,18 @@ sub cmd_2re {
 }
 
 sub GO() {
+    my $db = Envy::DB->new(\%ENV);
+
     while (@ARGV and $ARGV[0] =~ m/^\-/) {
-	$is_csh=1 if $ARGV[0] =~ m/^\-csh$/;
-	$debug=1 if $ARGV[0] =~ m/^\-debug$/;
-	shift @ARGV;
+	my $arg = shift @ARGV;
+	if ($arg =~ m/^\-csh$/) { $is_csh=1 }
+	elsif ($arg =~ m/^-q(uiet)?$/) { $warnlevel = 0 }
+	elsif ($arg =~ m/^\-debug$/) { $warnlevel = 5 }
+	elsif ($arg =~ m/^-v(\d+)?/) { $warnlevel = length $1? $1 : 2; }
+	else {
+	    warn "option '$arg' ignored\n"
+	}
     }
-    
-    my $db = new Envy::DB(\%ENV);
-    $db->debug($debug);
     
     my $cmd = cmd_2re(shift @ARGV);
     
@@ -72,9 +65,8 @@ sub GO() {
     if ($cmd eq "load" or $cmd eq "reload" or $cmd eq "show") {
 	&HELP if @ARGV < 1;
 	$is_showing = $cmd eq 'show';
-	$db->do_log(!$is_showing);
 	while (@ARGV) {
-	    $db->do_envy(shift @ARGV, 0);
+	    $db->envy(0, shift @ARGV);
 	}
 	sync_env($db);
 	
@@ -84,14 +76,14 @@ sub GO() {
 	if (@ARGV == 1 and $ARGV[0] eq 'all') {
 	    $db->unload_all();
 	} else {
-	    while (@ARGV) { $db->do_envy(shift @ARGV, 1); }
+	    while (@ARGV) { $db->envy(1, shift @ARGV); }
 	}
 	sync_env($db);
 	
     } elsif ($cmd eq "list") {
 	$cmd = cmd_2re(shift @ARGV);
 	my ($mo, $ld) = $db->status();
-	for ($db->warnings) { print }
+	for ($db->warnings($warnlevel)) { print }
 	my %loaded;
 	for (@$ld) { $loaded{$_}=1 }
 	my $l=0;
@@ -107,7 +99,7 @@ sub GO() {
 	print "\n** Type 'envy help' for usage information. **\n";
 	
     } elsif ($cmd eq "help") {
-	&HELP;
+	&HELP(shift @ARGV);
 	
     } else {
 	my ($mo, $ld) = $db->status();
@@ -121,13 +113,14 @@ sub GO() {
 	if (@mo == 0) {
 	    print "Envy '$cmd' not found.\n";
 	} elsif (@mo == 1) {
-	    $db->fuzzy(1);
-	    $db->do_envy(shift @mo, 0);
+	    my $mo = $mo[0];
+	    $db->check_fuzzy($mo);
+	    $db->envy(0, $mo);
 	    sync_env($db);
 	    return;
 	}
-	for ($db->warnings) { print }
-	@mo = grep(/^[^.]/, @mo); # hide dot files
+	for ($db->warnings($warnlevel)) { print }
+	@mo = grep(!/^\./, @mo); # hide dot files
 	use integer;
 	my $mid = (1+@mo)/2;
 	for (my $i=0; $i < $mid; $i++) {
@@ -145,45 +138,96 @@ sub GO() {
 }
 
 sub HELP {
-    print
-"envy $Envy::DB::VERSION
+    my $page = shift;
+    if (!$page) {
+	print "
+  Envy $Envy::DB::VERSION -- the Multi-Dimension Environment Manager
 
-1] USAGE
-   envy list                    - Extra-wide listing.
-   load <envy> [<envy> ...]     - (Re)loads <envy> environments.
-   show <envy> [<envy> ...]     - Dumps action to stdout.
-   un <envy> [<envy> ...]       - Unloads <envy> environments.
-   unload all                   - Unloads all loaded envys.
-   <str>                        - Lists/loads envys that match <str>.
-                                  DO NOT USE NON-INTERACTIVELY!
-   help                         - Not implemented.
+  Try:
+
+     envy help usage    for command line arguments
+     envy help file     for help writing .env files
+     envy help path     for an explaination of search paths
+     envy help env      for a list of envy specific environment variables
+     envy help copy     for licensing information
+
+";
+    } elsif ($page eq 'usage') {
+	print "
+   envy list                    - Extra-wide listing
+   load <envy> [<envy> ...]     - (Re)loads <envy> environments
+   show <envy> [<envy> ...]     - Dumps action to stdout
+   un <envy> [<envy> ...]       - Unloads <envy> environments
+   unload all                   - Unloads all loaded envys
+   <str>                        - Lists/loads envys that match <str>
+                                  AVOID IN SCRIPTS; CMD-LINE ONLY
 
    These options must be first on the command line:
-   -csh                         - csh mode.
-   -debug                       - Show search of envy path.
+   -csh                         - csh mode
+   -quiet                       - Only report errors
+   -v\\d                         - Set verbose level to parameter
+   -debug                       - Maximum verbosity
 
-2] EXAMPLE 'java.env'
+";
+    } elsif ($page eq 'file') {
+	print "
+   require Envy 2.16
+   dimension java-version            # Declares dimension membership
+   echo Java is really neat.  I like it.
+   alpha                             # Notify is alpha software
+   beta                              # Notify is beta software
+   depreciated                       # Notify is depreciated
+   error Java is no longer available.  Sorry.
 
-   require objstore                  # Causes objstore to be loaded.
-   dimension java-version            # Declares membership in dimension.
-   depreciated                       # Screams when loaded.
+   require objstore                  # Insures objstore is loaded
+   JAVA_HOME=/nw/prod/usr            # Sets environment variable
+   JAVA_HOME:=\$HOME/java             # Overrides environment variable
+   PATH+=\$JAVA_HOME/bin              # Prepend to colin separated list
+   PATH=+\$JAVA_HOME/bin              # Append to colin separated list
+   MYTOP=\$ENVY_BASE                  # Real path to .env file's tree top
+   MYTOP=\$ENVY_LINKBASE              # Path to .env file's tree top
 
-   JAVA_HOME=/nw/prod/usr            # Sets environment variable.
-   PATH+=/nw/prod/odi/osji/5.0/bin   # Prepended to colin separated list.
-   MYTOP=\$ENVY_BASE                  # Real path to envy without etc/envy/.
-   MYTOP=\$ENVY_LINKBASE              # Path to envy without etc/envy/.
+";
+    } elsif ($page eq 'path') {
+	my $w=0;
+	my %def;
+	my @cur = split /:+/, $ENV{ENVY_PATH};
+	for (@cur) { $w = length if length > $w }
+	for (@DefaultPath) { $def{$_} = 1 }
+	@cur = map { sprintf("%-$ {w}s  %s", $_, $def{$_}? '#default':'') } @cur;
+	print "
+   Current search path:
+     ".join("\n     ", @cur)."
 
-   Envy looks in \$HOME/.envy/ for environment files.  You may use this
-   directory for testing.
+   All search paths also include the .priv directory (if found).
 
-3] ENVIRONMENT VARIABLES
+   Envy also looks in \$HOME/.envy/ for .env files.  You can
+   use this to test new stuff.
 
-   \$ENVY_PATH      - Colin separated search path. Envys are typically
-                     installed under \$ETOP/env/envy/.
+";
+    } elsif ($page eq 'env') {
+	print "
+   \$ETOP           - Prefix for login scripts.
+   \$ENVY_PATH      - Colin separated search path.  Envys are typically
+                     installed in \$ETOP/env/envy.  See 'envy help path' too.
    \$ENVY_STATE     - Keeps track of which modules are loaded & dependencies.
    \$ENVY_DIMENSION - Keeps track of dimensions.
-   \$ENVY_VERSION   - Envy state protocol version.
+   \$ENVY_VERSION   - Envy protocol version.
+
 ";
-exit;
+    } elsif ($page eq 'copy') {
+	print q[
+   Copyright © 1997-1998 Joshua Nathaniel Pritikin.  All rights reserved.
+
+   This package is free software and is provided "as is" without express
+   or implied warranty.  It may be used, redistributed and/or modified
+   under the terms of the Perl Artistic License (see
+   http://www.perl.com/perl/misc/Artistic.html)
+
+];
+    } else {
+	print "No help for $page.  Sorry.\n";
+    }
+    exit;
 }
 &GO;

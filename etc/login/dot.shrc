@@ -1,7 +1,7 @@
 #----------------------------------------------------------------
 # Fix shell config options
 #----------------------------------------------------------------
-case `/bin/basename $SHELL` in
+case `basename $SHELL` in
 	ksh)
 		set -o trackall
 		;;
@@ -22,18 +22,15 @@ esac
 # Standard functions
 #----------------------------------------------------------------
 module() {
-        envy.pl $* > /tmp/t$$; . /tmp/t$$; /bin/rm -f /tmp/t$$
-	echo "*** Type 'envy' instead of module ***"
+        eval `envy.pl $*`;
+	echo "*** Type 'envy' instead of module ***";
 }
 envy() {
-        envy.pl $* > /tmp/t$$; . /tmp/t$$; /bin/rm -f /tmp/t$$
+        eval `envy.pl $*`;
 }
 #----------------------------------------------------------------
 # Run custom shrc
 #----------------------------------------------------------------
-if [ -f $HOME/.custom/.shrc ]; then
-	. $HOME/.custom/.shrc
-fi
-if [ -f $HOME/.custom/shrc ]; then
-	. $HOME/.custom/shrc
-fi
+f=$ETOP/etc/login/shrc.site; test -f $f && . $f
+f=$HOME/.custom/.shrc; test -f $f && . $f
+f=$HOME/.custom/shrc; test -f $f && . $f

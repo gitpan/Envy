@@ -1,7 +1,7 @@
-# MODULE_VERSION must be set before the shell is initialized.
-# This variable is set in dot.login.
+# ENVY_VERSION must be set before the shell is initialized.
+# This variable is set by envy.
 
-if ($?MODULE_VERSION) then
+if ($?ENVY_VERSION) then
 
 alias module 'envy.pl -csh \!* > /tmp/tmp.$$; source /tmp/tmp.$$; /bin/rm /tmp/tmp.$$; echo Type envy instead of module '
 alias envy 'envy.pl -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
@@ -20,6 +20,7 @@ alias psg 'ps -ef | grep \!*'
 set prompt = "`uname -n`:`whoami`:`pwd`< \! >% "
 alias cd        'chdir \!* ; set prompt = "`uname -n`:`whoami`:`pwd`< \! >% "'
 
-test -f $HOME/.custom/cshrc && source $HOME/.custom/cshrc
+set f=$ETOP/etc/login/cshrc.site; test -f $f && source $f
+set f=$HOME/.custom/cshrc; test -f $f && source $f
 
 endif
