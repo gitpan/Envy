@@ -60,18 +60,18 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1998-12-10 RELEASE 2.27 [STABLE]
+
+- Fixed $db->all_matching (list & paths were broken?).
+
+- Tweak 'envy show' to ignore the current environment a bit better.
+
+
 ** 1998-11-24 RELEASE 2.26 [STABLE]
 
 - Factored out parts of envy.pl to Envy::UI library.
 
 - Tweaks for smoother dimension swapping.
-
-
-** 1998-11-20 RELEASE 2.25 [STABLE]
-
-- Extra check for VERSION mismatch between envy.pl & Envy::DB.
-
-- Tweaks for login.IN (patrick@rcsm.ece.mcgill.ca).
 
 
 see ./INSTALL for hints on installation

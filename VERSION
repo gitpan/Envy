@@ -1,2 +1,2 @@
 use vars qw($VERSION);
-$VERSION = '2.26';
+$VERSION = '2.27';

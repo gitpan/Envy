@@ -26,9 +26,13 @@ sub alength {
 sub Envy::DB::all_matching {
     my ($db, $match) = @_;
     my ($mo, $ld) = $db->status2();
-    my @mo = sort grep { /$match/i and
-			     $_ !~ /^\./ and $mo->{$_} !~ /\.priv/ } keys %$mo;
-    (\@mo, $ld)
+    my %ok;
+    for my $k (keys %$mo) {
+	if ($k =~ /$match/i and $k !~ /^\./ and $mo->{$k} !~ /\.priv/) {
+	    $ok{$k} = $mo->{$k};
+	}
+    }
+    (\%ok, $ld)
 }
 
 sub Envy::DB::try_match {

@@ -71,13 +71,11 @@ sub GO() {
     if ($cmd eq 'paths') {
 	$cmd = cmd_2re(shift @ARGV);
 	my ($mo, $loaded) = $db->all_matching($cmd);
-	my @mo = @$mo;
 	for ($db->warnings($warnlevel)) { print }
-	my $l = alength(@mo);
+	my $l = alength(keys %$mo);
 	print "Location of source files".
 	    ($cmd eq '.*'?'':" matching '$cmd'").":\n\n";
-	for my $m (@mo) {
-	    next if $mo->{$m} =~ /\.priv/; # Hide files in .priv directory
+	for my $m (sort keys %$mo) {
 	    my $NumSpaces = 1 + $l - length $m;
 	    my $desc = $mo->{$m};
 	    print(($$loaded{$m}? " x ":"   ").
@@ -99,13 +97,16 @@ sub GO() {
     } elsif ($cmd eq "show") {
 	&Help if @ARGV < 1;
 	$is_showing = 1;
-	while (@ARGV) { $db->envy($is_unload, shift @ARGV); }
+	for my $mo (@ARGV) { $db->envy(!$is_unload, $mo); }
+	$db->commit;
+	$db->warnings; #flush
+	$db->begin;
+	for my $mo (@ARGV) { $db->envy($is_unload, $mo); }
 	sync_env($db);
 	
     } elsif ($cmd eq "un" or $cmd eq "unload") {
 	Huh("Unenvy unload doesn't mean what?")
 	    if $is_unload;
-	my ($ign, $loaded) = $db->status();
 	push @ARGV, $db->{first} if @ARGV == 0;
 	while (@ARGV) { $db->envy(1, shift @ARGV); }
 	sync_env($db);
@@ -113,16 +114,15 @@ sub GO() {
     } elsif ($cmd eq "list") {
 	$cmd = cmd_2re(shift @ARGV);
 	my ($mo, $loaded) = $db->all_matching($cmd);
-	my @mo = @$mo;
 	for ($db->warnings($warnlevel)) { print }
-	my $l = alength(@mo);
+	my $l = alength(keys %$mo);
 
 	if ($cmd eq '.*') {
 	    print "All available envies:\n\n";
 	} else {
 	    print "Envies matching '$cmd':\n\n";
 	}
-	for my $m (@mo) {
+	for my $m (sort keys %$mo) {
 	    my $NumSpaces = 1 + $l - length $m;
 	    my $padding = "\n" . ' 'x($l+4);
 	    my $desc = $db->description($m) || '-';
