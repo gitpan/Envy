@@ -5,7 +5,7 @@ Envy - A comprehensive multi-dimensional environment manager
 =head1 SYNOPSIS
 
 Unfortunately, installation takes a bit more work beyond simply typing
-'make'.  Big returns can involve negotiating big obstacles.
+'make'.  Big returns can involve negotiating big obstacles.  :-/
 
 =head1 TRIAL
 
@@ -97,8 +97,9 @@ On startup, envy will search these paths to find the $startup envy.
 =item * $startup
 
 You'll need to write a startup .env file to set up the initial login
-environment.  At a minimum, you'll need to set ENVY_PATH.  You may
-also like to require a few other envies by default.
+environment.  At a minimum, you'll need to set $ENVY_PATH.
+$ENVY_PATH is a colin separated list of paths where envy searches for
+.env files.  You may also like to require a few other envies by default.
 
 =back
 

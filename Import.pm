@@ -1,6 +1,8 @@
 use strict;
 package Envy::Import;
 use Symbol;
+use Sys::Hostname;
+use File::Basename;
 use vars qw($CSH);
 
 $CSH = '/bin/csh';
@@ -11,8 +13,6 @@ $CSH = '/bin/csh';
 
 sub Envy::DB::cache_shell_script { # PRIVATE
     my($o,$csh_name,$parent) = @_;
-    use Sys::Hostname;
-    use File::Basename;
     my($host) = hostname();
     my($home_envy) = $o->{env}{HOME}."/.envy";
     my($tmpname) = "$home_envy/.".&basename($csh_name);
@@ -29,20 +29,21 @@ sub Envy::DB::cache_shell_script { # PRIVATE
     if(opendir($dh,$home_envy)){
 	my $dirent;
 	while($dirent = readdir($dh)){
-	    if(   ($dirent =~ /^\..*_$host.env/)
-		  && (-M "$home_envy/$dirent" > $uptime)){
-		# file is older then the time the machine has been up so remove it.
+	    if ($dirent =~ /^\..*_$host.env/ and
+		-M "$home_envy/$dirent" > $uptime) {
+		# file is older then the time the machine has been
+		# up so remove it.
 		# this should keep things cleaned out to a certain extent.
 		unlink("$home_envy/$dirent");
 	    }
 	}
     }
     
-    if((-f $tmpname) && (-M $tmpname == -M $csh_name)){
+    if (-f $tmpname and -M $tmpname == -M $csh_name) {
 	return &basename($tmpname,(".env"));
     }
     
-    if(! -r $csh_name){
+    if (! -r $csh_name) {
 	$o->e("Cannot read file '$csh_name'");
 	return;
     }

@@ -59,24 +59,8 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
-** 1999-10-14 RELEASE 2.46
-
-- Improved installation instructions.
-
-- Removed LD_LIBRARY_PATH from the default configuration.
-
-- Deprecated wrapper.
-
-
-** 1999-09-03 RELEASE 2.45
-
-- 'launche': a replacement for wrapper.
-
-
 see ./INSTALL for hints on installation
 see ./UPGRADE if you are starting from a prior releases
-see ./TODO for a list of stuff in the tuit queue
-see ./CHANGES for a visionary perspective
 
 
 Send any questions or comments to envy@listbox.com.

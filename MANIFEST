@@ -29,6 +29,7 @@ example/area1/etc/envy/insure-4.0.env
 example/area1/etc/envy/insure-4.1.env
 example/area1/etc/envy/insure.env
 example/area1/etc/envy/openwin.env
+example/area1/etc/envy/passwd.env
 example/area1/etc/envy/pathtest.env
 example/area1/etc/envy/sunpro-4.1.env
 example/area1/etc/envy/sunpro.env

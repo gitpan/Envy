@@ -4,9 +4,9 @@ launche_usage() {
   /bin/cat <<EOF
 usage: launche [-v] [-c] [envy1] ... -- <shell cmd>
 
-  -c   Cleans the environment to precisely simulate the execution of
+  -c   Clean the environment to precisely simulate the execution of
        commands run by cron.
-  -v   Increments debugging level.
+  -v   Increment debugging level.
 EOF
   exit
 }

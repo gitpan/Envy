@@ -9,7 +9,7 @@ use Symbol;
 use Fcntl;
 use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $MAX_VAR_LENGTH
-	    $LOGIN $Context $NestLevel $Loop $Path @FORCEPATH);
+	    $LOGIN $Context $NestLevel $Loop $Path @FORCEPATH %PASSWD);
 $VERSION = '#VERSION#';
 $NestLevel = 0;
 
@@ -390,9 +390,7 @@ sub catalogue {
 
 sub tree_top {
     my ($base) = @_;
-    $base =~ s,/etc/envy/.+?\.(mo|env)$,, or
-	$base =~ s,/mo/.+?\.(mo|env)$,, or
-	    $base =~ s,/.+?\.(mo|env)$,,;
+    $base =~ s,(/etc/envy|/mo|)/[^/]+\.(mo|env)$,,;
     $base;
 }
 
@@ -454,9 +452,44 @@ sub interpolate {
 		if $var =~ /module/i;
 	    my $rbase = $Path;
 	    while (-l $rbase) {
-		$rbase = readlink($rbase) or die "readlink $rbase";
+		my $link = readlink($rbase) or die "readlink $rbase";
+		if ($link =~ m,^/,) {
+		    $rbase = $link    # absolute path
+		} else {
+		    # collapse ../
+		    $rbase =~ s,/([^/]+)$,/,;
+		    my $envy = $1;
+		    $link =~ s,/.+?$,/,;
+		    while ($link =~ s,\.\./$,,) {
+			$rbase =~ s,/[^/]+/$,/,;
+		    }
+		    $rbase .= $link . $envy;
+		}
 	    }
 	    return tree_top($rbase);
+	} elsif ($var =~ m/^ENVY_(R|E)UID([_\w]*)$/) {
+	    my $id = $1 eq 'R'? $< : $>;
+	    my $field = $2;
+	    my $pw = $PASSWD{$id} ||= [getpwuid($id)];
+	    my $got = do {
+		if ($field eq '') {
+		    $id
+		} elsif ($field eq '_NAME') {
+		    $pw->[0]
+		} elsif ($field eq '_GID') {
+		    $pw->[3]
+		} elsif ($field eq '_GCOS') {
+		    $pw->[6]
+		} elsif ($field eq '_DIR') {
+		    $pw->[7]
+		} elsif ($field eq '_SHELL') {
+		    $pw->[8]
+		} else {
+		    $o->w("Builtin '$var' unrecognized");
+		    ''
+		}
+	    };
+	    return $got;
 	}
 	return $o->e("Variable '$var' unset for interpolation"), '' if
 	    !defined $o->{env}{$var};

@@ -1,9 +1,6 @@
 ** TODO
 
-there's some problem with 'reload'...?
-
-Read the $ENVY_PATH one component at a time!  Big performance win on
-slow file-systems (like mine! :-) ?
+per user cache of envies
 
 switch perl PERL5PREFIX to PERL_MM_OPT?
 
@@ -11,7 +8,7 @@ explicit dependencies for refcnt>1 ?
 
 include package   # always reload; no dimensions?
 
-support for dimension migration (aliases)?
+support for dimension migration (dimension aliases)?
 
 real lexical analysis -- use XS?
 

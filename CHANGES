@@ -1,3 +1,26 @@
+** 2000-04-18 RELEASE 2.47
+
+- getpwuid via ENVY_[RE]UID*
+
+- Try to convert ENVY_BASE to an absolute path.
+
+- Documentation tweaks.
+
+
+** 1999-10-14 RELEASE 2.46
+
+- Improved installation instructions.
+
+- Removed LD_LIBRARY_PATH from the default configuration.
+
+- Deprecated wrapper.
+
+
+** 1999-09-03 RELEASE 2.45
+
+- 'launche': a replacement for wrapper.
+
+
 ** 1999-08-30 RELEASE 2.44
 
 - Emergency fix for wrapper.
