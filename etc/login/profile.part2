@@ -72,8 +72,10 @@ prtname=$HOME/.myprinter
 stash_hostname() {
   /bin/rm -f $chname $prtname
   echo $HOSTNAME > $chname
-  LPDEST=`ypmatch $HOSTNAME default_printer`
-  PRINTER=LPDEST
+  if [ x$LPDEST = x ]; then
+    LPDEST=`ypmatch $HOSTNAME default_printer`
+    PRINTER=LPDEST
+  fi
   echo $LPDEST > $prtname
 }
 

@@ -61,7 +61,29 @@ sub GO() {
     
     select STDERR;    # STDOUT goes the shell eval
     
-    if ($cmd eq "load" or $cmd eq "reload" or $cmd eq "show") {
+    if ($cmd eq 'show' and @ARGV >= 1 and $ARGV[0] eq 'paths') {
+	shift @ARGV;
+	# horrifying amount of code duplication GACK! XXX
+	$cmd = cmd_2re(shift @ARGV);
+	my ($mo, $ld) = $db->status();
+	for ($db->warnings($warnlevel)) { print }
+	my %loaded;
+	for (@$ld) { $loaded{$_}=1 }
+	my $l=0;
+	my @mo = sort grep(((/$cmd/i) && ($mo->{$_} !~ /\.priv/)), keys %$mo);
+	for my $m (@mo) { $l = length $m if $l < length $m; }
+	
+	print "Location of envies source code:\n\n";
+	for my $m (@mo) {
+	    next if $mo->{$m} =~ /\.priv/; # Hide files in .priv directory
+	    my $NumSpaces = 1 + $l - length $m;
+	    my $desc = $mo->{$m};
+	    print(($loaded{$m}? " x ":"   ").
+		  $m . ' 'x($NumSpaces-1) . " $desc\n");
+	}
+	print "\n** Type 'envy help' for usage information. **\n";
+    }
+    elsif ($cmd eq "load" or $cmd eq "reload" or $cmd eq "show") {
 	&HELP if @ARGV < 1;
 	$is_showing = $cmd eq 'show';
 	while (@ARGV) {
@@ -86,15 +108,21 @@ sub GO() {
 	my %loaded;
 	for (@$ld) { $loaded{$_}=1 }
 	my $l=0;
-	my @mo = sort grep(/$cmd/i, keys %$mo);
+	my @mo = sort grep(((/$cmd/i) && ($mo->{$_} !~ /\.priv/)), keys %$mo);
 	for my $m (@mo) { $l = length $m if $l < length $m; }
-	print "All currently available envies:\n\n";
+	if($cmd eq ".*"){
+	    print "All available envies:\n\n";
+	}else{
+	    print "Available envies matching '$cmd':\n\n";
+	}
 	for my $m (@mo) {
-	    my $file = $mo->{$m};
-        next if($file =~ /\.priv/); # Hide files in .priv directory
-#	    while (-l $file) { $file = readlink($file) or die "readlink: $!" }
-	    print $loaded{$m}? " x ":"   ";
-	    print $m . ' 'x(1 + $l - length $m) . $file . "\n";
+	    next if $mo->{$m} =~ /\.priv/; # Hide files in .priv directory
+	    my $NumSpaces = 1 + $l - length $m;
+	    my $padding = "\n" . ' 'x($l+4);
+	    my $desc = $db->description($m) || $mo->{$m};
+	    $desc =~ s/\n/$padding/g;
+	    print(($loaded{$m}? " x ":"   ").
+		  $m . ' 'x($NumSpaces-1) . " $desc\n");
 	}
 	print "\n** Type 'envy help' for usage information. **\n";
 	
@@ -114,7 +142,7 @@ sub GO() {
 	    if (@exact == 1) {
 		@mo = @exact;
 	    } else {
-		@mo = sort grep /$cmd/i, keys %$mo;
+		@mo = sort grep(((/$cmd/i) && ($mo->{$_} !~ /\.priv/)), keys %$mo);
 	    }
 	}
 	if (@mo == 0) {
@@ -159,12 +187,13 @@ sub HELP {
      envy help env      for a list of envy specific environment variables
      envy help copy     for licensing information
 
-  Support is available via envy\@listbox.com.  Thanks!
+  Email envy\@listbox.com for support.  Thanks!
 
 ";
     } elsif ($page eq 'usage') {
 	print "
-   list                         - Extra-wide listing
+   list [<envy>]                - See descriptions
+   show paths [<envy>]          - Location of source files
    load <envy> [<envy> ...]     - (Re)loads <envy> environments
    show <envy> [<envy> ...]     - Dumps action to stdout
    un <envy> [<envy> ...]       - Unloads <envy> environments

@@ -1,5 +1,5 @@
 #!/bin/ksh
-USAGE='usage: [-e envy1 envy2 ...] [-s <shell cmd> ...]'
+USAGE='usage: [-v] [-e envy1 envy2 ...] [-s <shell cmd> ...]'
 
 if [ x$ENVY_VERSION != x ]; then
   echo
@@ -17,6 +17,8 @@ if [ x$LOGNAME == x  ]; then
   # cron sets up LOGNAME automatically but 'env -i' does not.
   # Here we try to set it to something reasonable:
   LOGNAME=`#WHOAMI#`; export LOGNAME
+  # Probably need this too?
+  HOME=/home/$LOGNAME; export HOME
 fi
 
 typeset -i i
@@ -29,6 +31,7 @@ fi
 ENVY=`dirname $0`/envy.pl
 test -x $ENVY || echo Envy not found at $ENVY: PANIC
 
+v=0
 toload=#STARTUP#
 
 while [[ $1 = -* ]];
@@ -50,7 +53,9 @@ case $1 in
 	shift
     done;;
 
-*)  echo "ILLEGAL OPTION -"$1 
+-v) v=1;;
+
+*)  echo "UNKNOWN OPTION -"$1 
     echo $USAGE
     break
 esac
@@ -63,11 +68,13 @@ done
 ENVY_CONTEXT=${commands[0]}
 export ENVY_CONTEXT
 eval `$ENVY load $toload`
+if [ $v -eq 1 ]; then echo 'eval `'"$ENVY load $toload"'`'; fi
 
 j=$i
 i=0
 while [[ $i < $j ]];
 do
+    if [ $v -eq 1 ]; then echo ${commands[$i]}; fi
     ${commands[$i]} 
     i=$i+1
 done

@@ -11,7 +11,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $LOGIN $Reloading $Context $Loop $Path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(@DefaultPath);
-$VERSION = '2.22';
+$VERSION = '2.23';
 
 umask 0;  # Figure out how to run setuid 'envy' XXX
 
@@ -44,6 +44,7 @@ sub new { #PUBLIC
     $o->{'log'} = [];      # log entries
     $o->{errors} = 0;
     $o->{where} = $o->{env}{ &CONTEXT } || 'shell';
+    $o->{desc} = {};
 
     # MAKE SURE WE HAVE THE DEFAULT ENVY_PATH...
     my $fixed=0;
@@ -286,16 +287,26 @@ sub save_state { #PRIVATE
 # ---------------------------------------------------------------
 
 sub catalogue {
-    # read everything; get descriptions, dependencies, etc
-    #
-    # populate $o->{dimen}
-    #
-    # create $o->{info}{envy}
-    #   {desc} = 'the description'
-    #   {dimen} = dimension
-    #   {requires} = [...]
-    #
-    # Sounds good?
+    my($o) = shift;
+    $o->{desc} = {}; #reset
+    $o->search_envy_path() if !exists $o->{fullpath};
+    my $fh = gensym;
+    foreach my $mo (keys %{$o->{fullpath}}){
+	my @file;
+	# if we are going to touch the file-system, we might as
+	# well load the dimension/dependency information too? XXX
+	if(open($fh,$o->{fullpath}{$mo})){
+	    @file = <$fh>;
+	    close $fh;
+	}
+	chomp(@file);
+	my(@desc) = grep(s/^desc(ription)?\s+//,@file);
+	if((defined $o->{desc}{$mo}) && ($o->{desc}{$mo} ne "")){
+	    $o->{desc}{$mo} = join("\n",$o->{desc}{$mo},@desc);
+	} else {
+	    $o->{desc}{$mo} = join("\n",@desc);
+	}
+    }
 }
 
 # ---------------------------------------------------------------
@@ -336,7 +347,10 @@ sub interpolate {
 	return $1;
     }
     if($str =~ /^\`(.*)\`$/){
-	return `$1`;
+      my(@asBackTic) = `$1`;
+      chomp(@asBackTic);
+      my($sBackTic) = join(" ",@asBackTic);
+      $str =~ s/\`(.*)\`/$sBackTic/;
     }
     while ($str =~ s/
 	   \$ (
@@ -519,9 +533,13 @@ sub process_envy { #PRIVATE
 		$o->set_loaded($str, $mo);
 	    }
 
-	} elsif ($l =~ s/^desc(ription)?\s//) {
-	    # save somewhere XXX
-
+	} elsif ($l =~ s/^desc(ription)?\s+//) {
+	    my $d = $o->{desc};
+	    if (!$d->{$mo}) {
+		$d->{$mo} = $l;
+	    } else {
+		$d->{$mo} .= "\n$l";
+	    }
 	} elsif ($l =~ s/^(echo|error)\s?//) {
 	    $o->w($1 eq 'echo'? WARN : ERR, $o->interpolate(1,$l)."\n")
 		if !$reverse;
@@ -634,6 +652,12 @@ sub to_sync { #PUBLIC
     my $delta = $o->{delta};
     $o->{delta} = {};
     sort {$a->[0] cmp $b->[0]} map { [$_,$o->{env}{$_}] } keys %$delta;
+}
+
+sub description { #PUBLIC
+    my($o,$mo) = @_;
+    $o->catalogue() if !keys %{$o->{desc}};
+    $o->{desc}{$mo};
 }
 
 sub status { #PUBLIC

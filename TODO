@@ -1,5 +1,9 @@
 ** TODO
 
+Envy::Util or Envy::UI
+  - library of functions to assist in presentation
+  - factor envy.pl & DB.IN
+
 switch to MAKEMAKEROPT
 
 include package   # always reload; no dimensions
@@ -7,15 +11,16 @@ include package   # always reload; no dimensions
 factor fuzzy match
 
 Maybe it is possible to read the $ENVY_PATH one component at a time?
-Seems yes..?  Potentially big performance win.
+Seems yes..?  Potentially big performance win on slow file-systems
+(like mine! :-).
 
 short cuts:
   unload by dimension!
   unenvy : envy unload
 
-description / summary
-
 real lexical analysis - use XS?
+
+improve catalogue
 
 generate all shell scripts with perl templates
   keeps sh/csh in sync

@@ -60,18 +60,19 @@ shell.  Also, you can look at dependencies like this:
  ------------------+-------------------------------------------------------
 
 
+** 1998-10-21 RELEASE 2.23
+
+- Descriptions are now displayed in 'envy list'. (Thanks Tony!)  Moved
+full-paths to 'envy show paths'.
+
+- Add -v option to wrapper.
+
+
 ** 1998-09-26 RELEASE 2.22
 
 - Set $LOGNAME in wrapper if not already set.
 
 - Announce new mailing list: envy@listbox.com!
-
-
-** 1998-09-13 RELEASE 2.21
-
-- Documentation updates.
-
-- Improved configuration and installation.
 
 
 see ./INSTALL for hints on installation
