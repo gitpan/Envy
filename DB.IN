@@ -11,7 +11,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $LOGIN $Reloading $Context $Loop $Path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(@DefaultPath);
-$VERSION = '2.16';
+$VERSION = '2.17';
 
 umask 0;  # Figure out how to run setuid 'envy' XXX
 
@@ -43,7 +43,7 @@ sub new { #PUBLIC
     $o->{env} = \%env;
     $o->{delta} = {};    # which variables have changed
     $o->{'warn'} = [];   # warnings & error messages
-    $o->{log} = [];      # log entries
+    $o->{'log'} = [];      # log entries
     $o->{errors} = 0;
     $o->{where} = $o->{env}{ &CONTEXT } || 'shell';
 
@@ -527,13 +527,15 @@ sub process_envy { #PRIVATE
 	    $o->w($1 eq 'echo'? WARN : ERR, $o->interpolate(1,$l)."\n")
 		if !$reverse;
 
-	} elsif ($l =~ /^([\w-]+) (:)?= (.*)$/x) {
+	} elsif ($l =~ /^([\w-]+) (\+\=|\=\+) (.*)$/x) { # PATH=+ gotcha
+	    my @got = ($1, $2 eq '+=', ':', $3);
 	    $prechange->();
-	    $o->assign($reverse, $1,$2,$3);
+	    $o->rejoin($reverse, @got);
 
-	} elsif ($l =~ /^([\w-]+) (\+\=|\=\+) (.*)$/x) {
+	} elsif ($l =~ /^([\w-]+) (:)?= (.*)$/x) {
+	    my @got = ($1,$2,$3);
 	    $prechange->();
-	    $o->rejoin($reverse, $1, $2 eq '+=', ':', $3);
+	    $o->assign($reverse, @got);
 
 	} else {
 	    # maybe a newer version of envy knows about new tokens...
@@ -560,7 +562,7 @@ sub process_envy { #PRIVATE
     }
 
     $LOGIN ||= getlogin || getpwuid($<) || "?";
-    push @{$o->{log}}, { when => time(), who => $LOGIN,
+    push @{$o->{'log'}}, { when => time(), who => $LOGIN,
 			 action => ($reverse?'un':'').'load', what => $mo };
 }
 
@@ -612,7 +614,7 @@ sub write_log { #PUBLIC
     my $LOG = gensym;
     sysopen($LOG, $file, &O_WRONLY| &O_APPEND| &O_CREAT, 0666) or
 	return $o->w(NOISY, "envy: open $file: $!");
-    for my $e (@{$o->{log}}) {
+    for my $e (@{$o->{'log'}}) {
 	print $LOG (join("\t", scalar localtime($e->{when}),
 			 $e->{who}, $o->{where}, $e->{action}, $e->{what})."\n");
     }
@@ -620,8 +622,8 @@ sub write_log { #PUBLIC
 
 sub warnings { #PUBLIC
     my ($o, $level) = @_;
-    my $all = $o->{warn};
-    $o->{warn} = [];
+    my $all = $o->{'warn'};
+    $o->{'warn'} = [];
     $level = 1 if !defined $level;
     map { $_->[1] } grep { $_->[0] <= $level } @$all;
 }

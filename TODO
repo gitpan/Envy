@@ -12,8 +12,9 @@ short cuts:
   envied : show only loaded *.env
 
 regression tests
+  append / prepend
   dimension swapping
-  tests for .private
+  tests for .priv
   top-level switching
 
 comparison operations -

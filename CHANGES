@@ -1,3 +1,10 @@
+** 1998-03-05 RELEASE 2.15
+
+- Fixed handling of $HOME/.envy.
+
+- Improvements to Envy::Load.
+
+
 ** 01-16-98 RELEASE 2.13
 
 - I've been waiting for the code to stabilize.  This release seems

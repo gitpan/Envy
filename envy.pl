@@ -92,6 +92,7 @@ sub GO() {
 	print "All envys currently available ($Envy::DB::VERSION):\n\n";
 	for my $m (@mo) {
 	    my $file = $mo->{$m};
+        next if($file =~ /\.priv/); # Hide files in .priv directory
 #	    while (-l $file) { $file = readlink($file) or die "readlink: $!" }
 	    print $loaded{$m}? " x ":"   ";
 	    print $m . ' 'x(1 + $l - length $m) . $file . "\n";
@@ -105,7 +106,10 @@ sub GO() {
 	my ($mo, $ld) = $db->status();
 	my %loaded;
 	for (@$ld) { $loaded{$_}=1 }
-	my @mo = sort grep(/$cmd/i, keys %$mo);
+	my @mo;
+    foreach (sort keys %$mo){
+      push(@mo,$_) if($mo->{$_} !~ /\.priv/); # hide .priv directory files
+    }
 	if (@mo > 1) {
 	    my @exact = sort grep(/^$cmd$/i, keys %$mo);
 	    @mo = @exact if @exact == 1;
