@@ -4,8 +4,8 @@ Envy - A comprehensive multi-dimensional environment manager
 
 =head1 SYNOPSIS
 
-Installation takes a bit more work beyond simply typing 'make'.
-Unfortunately, big returns generally require navigating big risks.
+Installation takes a bit more work beyond simply typing 'make'.  Big
+returns (unfortunately) generally involve navigating big risks.
 Sorry!
 
 =head1 FIRST TIME USERS
@@ -54,10 +54,9 @@ The following cover installation for both types of shells:
 =back
 
 Be aware that C<bash> uses '.bash_profile' and C<zsh> uses
-'.zprofile'.  You wont be able to test envy if you change the wrong
-file, so don't.  Logout and login.  Hopefully, you will find that your
-window manager did not restart.  This is a good sign.  Envy is now
-installed in your home directory.
+'.zprofile'.  Logout and login.  You may find that X Windows did not
+start automatically.  This is a good sign.  Envy is now installed in
+your home directory.
 
 Type 'envy list' or 'envy help'.  Explore.  Get a feel for it.  Create
 a few .env files.  Try out dimensions.  Maybe demo to your office-mate.
@@ -72,9 +71,31 @@ just renamed.  To see what has changed recently use:
 Simply undo the damage (rm the symlinks and copy your old dot files
 back) and you should be back to normal.
 
+=head2 INSTALLING
+
+By default, envy installs basic login scripts appropriate for most
+Unix systems.  However, you probably don't need or want them.  All
+that is really necessary for envy to work correctly, besides
+installing the perl code, are the following shell functions:
+
+SH:
+
+  envy() { eval `envy.pl $*`; }
+  unenvy() { eval `envy.pl -un $*`; }
+
+CSH:
+
+  alias envy 'envy.pl -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
+  alias unenvy 'envy.pl -un -csh \!* > /tmp/t$$; source /tmp/t$$; /bin/rm -f /tmp/t$$'
+
+Talk to a system administrator (maybe yourself) about adding these
+functions to the global login scripts.  That's all that is needed
+besides the perl code.
+
 =head2 WHY AM I GOING THROUGH ALL THIS HELL?
 
-Because envy could solve some of your long standing problems!
+Because envy could solve some of your tenacious, long standing
+problems!
 
 =over 4
 
@@ -91,7 +112,8 @@ can slowly nudge users into changing in the gentlest possible way.
 Each user can customize their environment to exactly the right degree.
 Instead of being forced into a global environment or splintering into
 an entirely custom environment, there is flexiblility to customize
-within the globally standardized environment in varying degrees.
+within the globally standardized environment as appropriate for each
+user.
 
 =item * DEPENDENCIES
 
@@ -99,7 +121,8 @@ Envy makes dependencies between packages explicit and understandable.
 
 =item * CRON JOBS
 
-Envy makes it easy to correctly set up cron jobs.
+Envy makes it easy to correctly set up cron jobs.  Cron jobs will no
+longer fail unexpectedly due to missing environment variables.
 
 =back
 
@@ -126,18 +149,19 @@ Here is what happens upon login (Bourne Shell):
 
 You are free to customize the *.site files (or omit them).  You will
 also need to set up window manager startup scripts under
-$ETOP/etc/desktop.
+$ETOP/etc/desktop.  See the L<INSTALLING> section above if you are
+planning not to use the login scripts supplied with envy.
 
 =head2 CRONTAB
 
 Use C<$ETOP/bin/wrapper> to initiate cron jobs.  C<wrapper> is a very
-simple script that loads envys given on the command line then runs
-scripts.
+simple script that loads envies given on the command line and then
+executes shell commands.
 
 =head1 EXTENSION API
 
 Envy is written entirely in perl and is designed to be used as a
-library in addition to a command-line tool.  One possible project is a
+library as well as a command-line tool.  One possible project is a
 graphical front end to help navigate the environment.  Also see the
 TODO file.
 
@@ -151,7 +175,7 @@ For a comparison of unix shells:
 
   http://www.faqs.org/faqs/unix-faq/shell/shell-differences/index.html
 
-And for why you should NOT do shell programming in csh:
+And for why you should not do shell programming in csh:
 
   http://www.faqs.org/faqs/unix-faq/shell/csh-whynot/
 

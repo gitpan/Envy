@@ -8,9 +8,6 @@ use Envy::UI qw(cmd_2re alength);
 warn "[WARNING: Envy version mismatch -- Envy::DB $Envy::DB::VERSION ne $VERSION]\n\n"
     if $Envy::DB::VERSION ne $VERSION;
 
-# If you want to reuse any of the code in this file, let me
-# know and I'll move it to Envy::UI or somesuch.  Thanks!
-
 my $warnlevel = $ENV{ENVY_VERBOSE} || 1;
 my $is_unload=0;
 my $is_csh=0;
@@ -134,6 +131,9 @@ sub GO() {
 	}
 	Huh();
 	
+    } elsif ($cmd eq 'diff') {
+	Huh("The 'diff' command is not implemented yet.");
+
     } elsif ($cmd eq "help") {
 	&Help(shift @ARGV);
 	
@@ -202,11 +202,12 @@ sub Help {
 	print "
    list [<envy>]                - See descriptions
    paths [<envy>]               - Location of source files
-   load <envy> [<envy> ...]     - (Re)loads <envy> environments
-   show <envy> [<envy> ...]     - Dumps action to stdout
-   un <envy> [<envy> ...]       - Unloads <envy> environments
-   unload all                   - Unloads all loaded envys
-   <str>                        - Lists/loads envys that match <str>
+   load <envy> [<envy> ...]     - Loads <envy>
+   reload <envy> [<envy> ...]   - Unloads & reloads <envy>
+   show <envy> [<envy> ...]     - Shows changes (shell env is unchanged)
+   un <envy> [<envy> ...]       - Unloads <envy>
+   unload all                   - Unloads all envies
+   <str>                        - Lists/loads envies that match <str>
                                   AVOID IN SCRIPTS; CMD-LINE ONLY
 
    These options must be first on the command line:
@@ -238,13 +239,14 @@ sub Help {
 
     } elsif ($page eq 'author') {
 	print "
-   require Envy 2.16
    dimension java                    # Declares dimension membership
-   echo Java is really neat.  I like it.
+   desc Java 1.2 Test                # Description for 'envy list'
+   echo Java admin - call Joe x1212  # Outputs when loading
    alpha                             # Notify is alpha software
    beta                              # Notify is beta software
    depreciated                       # Notify is depreciated
    error Java is no longer available.  Sorry.
+   require Envy 2.16                 # Uses required features from 2.16
 
    require objstore                  # Insures objstore is loaded
    JAVA_HOME=/nw/prod/usr            # Sets environment variable

@@ -115,23 +115,27 @@ use vars qw(@ISA @EXPORT_OK
 @ISA = ('Exporter');
 @EXPORT_OK = qw(%How);
 
-# Hardcoded environment:
-%env0 = (
-].join('',map { "\t'$_' => '$$env0{$_}',\n" } sort keys %$env0) .q[);
-
-# Startup envy:
-$startup = ]."'$How{startup}';".q[
-
-# Prefix:
-$prefix = ]."'$How{prefix}';".q[
-
-# Default $ENVY_PATH:
+# Default $ENVY_PATH
 @path = qw(
 ].join('', map { "\t$_\n" } @{$How{path}}).q[);
+
+# Prefix
+$prefix = ]."'$How{prefix}';".q[
 
 # How to get login name
 $whoami = ]."'$How{whoami}';".q[
 
+# Hardcoded environment
+%env0 = (
+].join('',map { "\t'$_' => '$$env0{$_}',\n" } sort keys %$env0) .q[);
+
+# --- ONLY NEEDED FOR DOT FILES: -------------------
+# Startup envy
+$startup = ]."'$How{startup}';".q[
+
+# ------------------------------------------------------------------------
+# All done; now collect all settings into an easy to use hash:
+#
 %How = (env0=>\%env0, startup=>$startup, prefix=>$prefix, path=>\@path,
 	whoami=>$whoami);
 

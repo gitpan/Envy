@@ -1,7 +1,5 @@
 ** TODO
 
-option not to install dot profile/login
-
 Read the $ENVY_PATH one component at a time!  Big performance win on
 slow file-systems (like mine! :-)
 
@@ -32,8 +30,6 @@ comparison operations -
   against the same envy symbolic name
     or against two different
   diff similarly named env files - shadowed report
-
-might be a way to avoid the need for ETOP in the login scripts?
 
 pipe long output through $ENV{PAGER}?
   can't fix envy.pl because shell will eval STDOUT!
@@ -81,15 +77,13 @@ Gack!  Your right!  What a mess!  :-)
  
 ---------------------------------------------- PIE IN THE SKY! ---
 
-store ENVY_STATE, etc, as compressed binhex?!
+store ENVY_STATE, etc, as compressed hex?!
 
 envy.pl
   show loaded dimensions in PROMPT?
 &
   in the 'envy list' the marker is always 'x'
     make the marker dependent on where the file was loaded?
-
-script to test maximum number of characters per environment variable?
 
 macro-ize?
   unshift(VAR, ' ', COMPONENTS)
@@ -99,4 +93,4 @@ Implement BSD make's "?=" variable assignment operator.  The variable
 is assigned the specified value only if that variable is not already
 defined.  Unload must be eager.  Does anyone want this?
 
-split/join of any very long variable?
+split/join of _any_ very long variable?

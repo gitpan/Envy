@@ -16,8 +16,11 @@ if (open $fh, ">Conf.pm") {
   close $fh;
 }
 
+die "Makefile.PL must be run from the current directory.\n"
+    if !-e './envy.IN';
 if (-d "./blib") {
-  system "rm -rf ./blib";
+    print "rm -rf ./blib\n";
+    system "rm -rf ./blib";
 }
 
 # set up example .env areas
@@ -28,11 +31,12 @@ unlink "./example/area2/etc/envy/area1.env";
 symlink "../../../../example/area1/etc/envy/area1.env",
     "./example/area2/etc/envy/area1.env" or warn $!;
 
+# option to disable @dot?
 my @dot = qw(
   dot.profile profile.part2 dot.shrc
   dot.cshrc dot.login login.part2
   bash.inputrc dot.dtprofile
-);
+) if 1;
 
 my @prefix = (PREFIX => $ENV{PERL5PREFIX})
     if exists $ENV{PERL5PREFIX};
