@@ -9,18 +9,18 @@ does envy fit in?
 
 Envy is designed to centralize specification of environment variables.
 It also helps manage dependencies between versions.  It sounds like
-envy will fit your requirements.  Read on!
+envy can fit your requirements.  Read on!
 
 =head1 IS THERE ANY DOCUMENTATION ON THE FORMAT OF AN .ENV FILE?
 
-See 'envy help'!
+See 'envy help' and the example directory.
 
 =head1 WHY IS IT IMPORTANT TO BE ABLE TO UNLOAD?
 
-Sure, you could just start a fresh shell but this isn't very clean or
-intuitive.  Also important, it is the requirement of being able to
-unload that restricts the kind of operations that are supported.  This
-principle guided the design of envy as much as anything else.
+You can always start a fresh shell, but it isn't very clean or
+intuitive.  Rather, I took the requirement to unload as a principle in
+guiding envy's design.  It is this requirement more than anything else
+that restricts the kind of operations that are supported.
 
 =head1 HOW CAN I DO CONDITIONAL REQUIRE?
 
@@ -48,13 +48,14 @@ For example, if you have a set of envy files like this:
   boomhopper-3.2.env
 
 Set up 'skylark' as one dimension and 'boomhopper' as another.  Then
-you can mix versions but you can't have two versions of 'boomhopper'
-active at once.
+you can mix versions but you will be prevented from having two
+versions of 'boomhopper' active at once.  The name of the dimension is
+usually the name of the packages without the version number.
 
 =head1 ARE THERE ANY TOOLS SIMILAR TO ENVY?
 
 Envy shares some ideas with www.modules.org.  That is the only similar
-tool I know of.
+tool that I know of.
 
 =head1 HOW DO I TEST NEW .ENV FILES?
 

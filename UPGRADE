@@ -1,0 +1,11 @@
+Even after:
+
+  make test
+
+You should be very nervous about upgrading or changing anything about
+envy.  I am!  To give you some assurance, you can see what will
+changed before you do a 'make install':
+
+  make diff
+
+More tests welcome.  Let me know if you have any clever suggestions!

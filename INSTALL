@@ -1,35 +1,154 @@
-Envy is a comprehensive, multi-dimensional environment manager.
+=head1 NAME
 
-Installation is going to take some work beyond simply typing 'make'.
-If you are a first time user follow these steps (depending on your
-login shell):
+Envy - A comprehensive, multi-dimensional environment manager
 
+=head1 SYNOPSIS
 
-SH:
+Installation takes a bit more work beyond simply typing 'make'.
+Unfortunately, big returns generally require navigating big risks.
+Sorry!
+
+=head1 FIRST TIME USERS
+
+It is recommended that you install envy privately in your home
+directory before risking the disruption of thousands of grumpy
+co-workers.  Before you proceed, print this documentation on paper so
+you can refer to it if something electronic goes amiss.
+
+To install envy, you need to know what is your login shell.  In the
+Unix world, there are mainly two kinds of command line shells
+available.  You can find out which one you have with:
+
+  echo $SHELL
+
+The following cover installation for both types of shells:
+
+=over 4
+
+=item * SH, KSH, BASH, Etc.
+
    PERL5PREFIX=$HOME/test; export PERL5PREFIX
    perl Makefile.PL
-   make test; make install
+   make test
+   make install
 
-   env -i $PERL5PREFIX/bin/wrapper -s echo            # test it
+   # try it out
+   $PERL5PREFIX/bin/wrapper -s echo
 
    mv $HOME/.profile $HOME/.profile.bak
    ln -s $PERL5PREFIX/etc/dot.profile $HOME/.profile
 
+=item * CSH, TCSH, Etc.
 
-CSH:
    setenv PERL5PREFIX=$HOME/test
    perl Makefile.PL
-   make test; make install
+   make test
+   make install
 
-   env -i $PERL5PREFIX/bin/wrapper -s echo            # test it
+   # try it out
+   $PERL5PREFIX/bin/wrapper -s echo
 
    mv $HOME/.login $HOME/.login.bak
    ln -s $PERL5PREFIX/etc/dot.login $HOME/.login
 
+=back
 
-Logout and login.  Type 'envy list' or 'envy help'.
+Be aware that C<bash> uses '.bash_profile' and C<zsh> uses
+'.zprofile'.  You wont be able to test envy if you change the wrong
+file, so don't.  Logout and login.  Hopefully, you will find that your
+window manager did not restart.  This is a good sign.  Envy is now
+installed in your home directory.
 
-Explore.  Get a feel for it, and get others to try it.
+Type 'envy list' or 'envy help'.  Explore.  Get a feel for it.  Create
+a few .env files.  Try out dimensions.  Maybe demo to your office-mate.
 
-Thanks and good luck!
+=head2 UNINSTALLING
 
+Uninstalling is easy.  None of your old dot files have been deleted,
+just renamed.  To see what has changed recently use:
+
+  cd $HOME; ls -at | more
+
+Simply undo the damage (rm the symlinks and copy your old dot files
+back) and you should be back to normal.
+
+=head2 WHY AM I GOING THROUGH THIS HELL?
+
+Because envy could solve some of your long standing problems!
+
+=over 4
+
+=item * REUSE
+
+Envy allows the centralization of configuration files.  When new
+versions of software come out, it is easy to globally publish new
+configuration files in preparation for a gradual and controlled
+migration.  Instead of being locked into backward compatibility, you
+can slowly nudge users into changing in the gentlest possible way.
+
+=item * CHOICE
+
+Each user can customize their environment to exactly the right degree.
+Instead of being forced into a global environment or splintering into
+an entirely custom environment, there is flexiblility to customize
+within the globally standardized environment in varying degrees.
+
+=item * DEPENDENCIES
+
+Envy makes dependencies between packages explicit and understandable.
+
+=item * CRON JOBS
+
+Envy makes it easy to correctly set up cron jobs.
+
+=back
+
+=head1 ENVY SETUP
+
+Hopefully, you will find envy very easy to set up for your site.  If
+there is any way it can be made easier, please let me know!
+
+Before you install 'make test'; check ./Conf.pm; and 'make diff'.
+
+=head2 SITE SETUP
+
+Here is what happens upon login (Bourne Shell):
+
+  $HOME/.profile -> $ETOP/etc/login/dot.profile
+  envy load `cat $HOME/.custom/startup`
+  $ETOP/etc/login/profile.part2
+  $ETOP/etc/login/profile.site
+  $HOME/.custom/profile
+    $HOME/.shrc -> $ETOP/etc/login/dot.shrc
+    $ETOP/etc/login/shrc.site
+    $HOME/.custom/shrc
+  $ETOP/etc/desktop/`cat $HOME/.custom/win.name`
+
+You are free to customize the *.site files (or omit them).  You will
+also need to set up window manager startup scripts under
+$ETOP/etc/desktop.
+
+=head2 CRONTAB
+
+Use C<$ETOP/bin/wrapper> to initiate cron jobs.  C<wrapper> is a very
+simple script that loads envys given on the command line then runs
+scripts.
+
+=head1 EXTENSION API
+
+Envy is written entirely in perl and is designed to be used as a
+library in addition to a command-line tool.  One possible project is a
+graphical front end to help navigate the environment.  Also see the
+TODO file.
+
+=head1 SEE ALSO
+
+For a comparison of unix shells:
+
+  http://www.faqs.org/faqs/unix-faq/shell/shell-differences/index.html
+
+And for why you shouldn't do shell programming in csh:
+
+  http://www.faqs.org/faqs/unix-faq/shell/csh-whynot/
+
+=cut

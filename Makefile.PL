@@ -2,10 +2,12 @@
 
 use ExtUtils::MakeMaker;
 
-warn q[
+warn "
        Please read ./INSTALL unless you know what you're doing!
 
-];
+       Please read ./UPGRADE if you are upgrading.
+
+";
 
 use Symbol;
 my $fh = gensym;
@@ -68,23 +70,32 @@ sub MY::postamble {
     while (my($k,$v)=each %$subst_files) {
 	$str .= "
 $v :: $k set_defaults.PL Conf.pm DefaultConf.pm ".'
-	$(PERL) -I$(INST_ARCHLIB) -I$(INST_LIB) -I$(PERL_ARCHLIB) -I$(PERL_LIB) set_defaults.PL'."\n";
+	$(PERL) set_defaults.PL'."\n";
     }
     $str .= "
 clean ::
 	echo 0 > Conf.pm
 	rm -f ".join(' ', values %$subst_files)."\n";
     
-    $str .=
-    q{
+    $str .= q{
 
 set_defaults.PL :: Conf.pm DefaultConf.pm
 
 pure_site_install ::
-	}.$self->{NOECHO}.q{$(MOD_INSTALL) \
-		read }.$self->catfile('$(SITEARCHEXP)','auto','$(FULLEXT)','.packlist').q{ \
-		write }.$self->catfile('$(INSTALLSITEARCH)','auto','$(FULLEXT)','.packlist').q{ \
+	}.$self->{NOECHO}.'$(MOD_INSTALL) \
+		read '.$self->catfile('$(SITEARCHEXP)','auto','$(FULLEXT)','.packlist').' \
+		write '.$self->catfile('$(INSTALLSITEARCH)','auto','$(FULLEXT)','.packlist').' \
 		$(INST_ETC) $(INSTALLPRIVETC)
-};
-$str;
+';
+    $str .= '
+
+diff :: all
+	'.$self->{NOECHO}.'$(PERL) ./rundiff \
+		$(INST_SCRIPT) $(INSTALLSCRIPT) \
+		$(INST_LIB) $(INSTALLSITELIB) \
+		$(INST_ETC) $(INSTALLPRIVETC)
+
+';
+
+    $str;
 }

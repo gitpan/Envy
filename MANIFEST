@@ -1,6 +1,6 @@
 CHANGES
-DefaultConf.pm
 DB.IN
+DefaultConf.pm
 FAQ.pod
 INSTALL
 Load.pm
@@ -9,6 +9,7 @@ MANIFEST.SKIP
 Makefile.PL
 README
 TODO
+UPGRADE
 envied
 envy.pl
 etc/login/bash.inputrc
@@ -30,6 +31,7 @@ example/area1/etc/envy/sunpro.env
 example/area2/etc/envy/area2.env
 login.IN
 profile.IN
+rundiff
 set_defaults.PL
 subst.pm
 t/config.t

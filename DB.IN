@@ -1,4 +1,4 @@
-# ghostwheel dimension multiplexer a la -*-perl-*- !
+# ghostwheel dimension multiplexer; -*-perl-*- please !
 
 # use 5.005;  ???
 use strict;
@@ -11,7 +11,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $LOGIN $Reloading $Context $Loop $Path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(@DefaultPath);
-$VERSION = '2.20';
+$VERSION = '2.21';
 
 umask 0;  # Figure out how to run setuid 'envy' XXX
 
@@ -27,8 +27,6 @@ sub ERR() { 0 }
 sub WARN() { 1 }
 sub NOISY() { 2 }
 sub DEBUG() { 3 }
-
-# make all config variables available here? XXX
 
 if ($ENV{REGRESSION_ENVY_PATH}) {
     @DefaultPath = split m/\s+/, $ENV{REGRESSION_ENVY_PATH};

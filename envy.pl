@@ -59,8 +59,7 @@ sub GO() {
     
     my $cmd = cmd_2re(shift @ARGV);
     
-    # STDOUT goes the shell eval
-    select STDERR;
+    select STDERR;    # STDOUT goes the shell eval
     
     if ($cmd eq "load" or $cmd eq "reload" or $cmd eq "show") {
 	&HELP if @ARGV < 1;
@@ -149,12 +148,13 @@ sub HELP {
     my $page = shift;
     if (!$page) {
 	print "
-  Envy $Envy::DB::VERSION -- the Multi-Dimension Environment Manager
+  Envy $Envy::DB::VERSION -- Multi-Dimension Environment Manager
 
   Try:
 
      envy help usage    for command line arguments
-     envy help file     for help writing .env files
+     envy help custom   for a description of \$HOME/.custom files
+     envy help author   for help writing .env files
      envy help path     for an explaination of search paths
      envy help env      for a list of envy specific environment variables
      envy help copy     for licensing information
@@ -162,7 +162,7 @@ sub HELP {
 ";
     } elsif ($page eq 'usage') {
 	print "
-   envy list                    - Extra-wide listing
+   list                         - Extra-wide listing
    load <envy> [<envy> ...]     - (Re)loads <envy> environments
    show <envy> [<envy> ...]     - Dumps action to stdout
    un <envy> [<envy> ...]       - Unloads <envy> environments
@@ -177,7 +177,25 @@ sub HELP {
    -debug                       - Maximum verbosity
 
 ";
-    } elsif ($page eq 'file') {
+    } elsif ($page eq 'custom') {
+	require Envy::Conf;
+	# avoid silly warning
+	my $startup = $Envy::Conf::startup = $Envy::Conf::startup;
+	print '
+     $HOME/startup   - Your startup envy (default: '.$startup.')
+     $HOME/win.name  - Your window manager setup
+
+   Bourne Shell:
+     $HOME/profile   - Sourced once upon login
+     $HOME/shrc      - Sourced for each new shell instance
+
+   C-Shell:
+     $HOME/login     - Sourced once upon login
+     $HOME/cshrc     - Sourced for each new shell instance
+
+';
+
+    } elsif ($page eq 'author') {
 	print "
    require Envy 2.16
    dimension java-version            # Declares dimension membership

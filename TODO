@@ -1,23 +1,28 @@
 ** TODO
 
-send build configuration to a file?
-
 pipe long output through $ENV{PAGER}
   can't mess with envy.pl because shell is eval STDOUT!
 
 Maybe it is possible to read the $ENVY_PATH one component at a time?
 Seems yes..?  Potentially big performance win.
+  factor fuzzy match
 
 description / summary
 
-real lexical analysis
+real lexical analysis - use XS?
+
+generate all shell scripts with perl templates
+  keeps sh/csh in sync
+  less chance of bugs
+  make compatible with rc/es!
 
 short cuts:
+  unload by dimension!
   unenvy : envy unload
-  unload by dimension?
 
 regression tests
   dimension swapping
+  tests for fuzzy match
   tests for .priv
   top-level switching
 
@@ -27,11 +32,11 @@ comparison operations -
   diff similarly named env files - shadowed report
 
 in the 'envy list' and such, the marker is always 'x'
-  instead, the marker should be dependent on where the file was loaded?
+instead, the marker should be dependent on where the file was loaded?
 
 Implement BSD make's "?=" variable assignment operator.  The variable
 is assigned the specified value only if that variable is not already
-defined.
+defined.  Unload must be eager.  Does anyone want this?
 
 macro-ize?
   unshift(VAR, ' ', COMPONENTS)
@@ -43,19 +48,12 @@ umask 0;  # Figure out how to run setuid 'envy'?
 
 show loaded dimensions in PROMPT?
 
-generate all shell scripts with perl templates
-  keeps sh/csh in sync
-  less chance of bugs
-
 documentation for:
-  site profile, etc
-  window manager setup
-  mention to be careful about '%' in crontab files?
   Envy::DB API
-  envy help conf??
 
 ---------------------------------------- GRAPHICAL ENVY PROJECT ---------
 
+Tony.Parent@Symbios.COM wrote:
 This afternoon I started prototyping some stuff for a graphical envy
 module picker/cshrc creator. (Not sure whether I want to use the
 dotfile generator or not.) I'm using perl-TK, so can directly use the
