@@ -13,6 +13,12 @@ fi
 
 #INITIAL_ENV#
 
+if [ x$LOGNAME == x  ]; then
+  # cron sets up LOGNAME automatically but 'env -i' does not.
+  # Here we try to set it to something reasonable:
+  LOGNAME=`#WHOAMI#`; export LOGNAME
+fi
+
 typeset -i i
 typeset -i j
 if [[ $# = 0 ]]; then

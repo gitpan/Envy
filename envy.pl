@@ -159,6 +159,8 @@ sub HELP {
      envy help env      for a list of envy specific environment variables
      envy help copy     for licensing information
 
+  Support is available via envy\@listbox.com.  Thanks!
+
 ";
     } elsif ($page eq 'usage') {
 	print "

@@ -1,4 +1,4 @@
-# ghostwheel dimension multiplexer; -*-perl-*- please !
+# ghostwheel dimension multiplexer; -*-perl-*-
 
 # use 5.005;  ???
 use strict;
@@ -11,7 +11,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION $EVERSION @DefaultPath
 	    $LOGIN $Reloading $Context $Loop $Path);
 @ISA = ('Exporter');
 @EXPORT_OK = qw(@DefaultPath);
-$VERSION = '2.21';
+$VERSION = '2.22';
 
 umask 0;  # Figure out how to run setuid 'envy' XXX
 
@@ -250,8 +250,8 @@ sub nav_dimension { #PRIVATE
 	}
 
     } else {
-	$o->w(WARN, "Envy '$by' opening $di (was $old)")
-	    if $old ne $by;
+	$o->w(WARN, "Envy '$by' releasing $di (was '$old')")
+	    if $old && $old ne $by;  #unlikely to occur
 	$o->{dimen}{$di} = undef;
     }
 }
@@ -496,7 +496,7 @@ sub process_envy { #PRIVATE
 		if !$reverse;
 	    
 	} elsif ($l =~ s/^dimension\s+//) {
-	    # allow multiple dimensions? variable substitution? XXX
+	    # variable substitution? XXX
 	    return $o->w(ERR, "Dimensions must be declared firstly")
 		if $seen_stuff && !$reverse;
 	    return $o->w(ERR, "Bad dimension name '$l'")

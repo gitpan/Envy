@@ -3,69 +3,21 @@ Sick of an endlessly growing PATH?  Me too!
 Envy does shell-independent environment variable management.
 
 
-Envy tries not to be ambitious.  It is designed to be a narrow tool
-and aims to solve specific and practical problems without going wildly
+Envy tries to avoid beign ambitious.  It is designed as a narrow tool
+to solve specific and practical problems without going wildly
 overboard.  Its modest scope includes:
 
 1. Easy, safe upgrade from any other dot-file setup.  Works with sh,
-ksh, bash, zsh, csh, and tcsh.
+ksh, bash, zsh, csh, and tcsh.  Support for rc & es are planned.
 
 2. A mechanism is provided for setting and prepending environment
 variables in a variety of flexible ways.  All modifications are
 reversible.  I think reversibility is important.
 
-3. Machine generated .profile, .login, and crontab wrapper with
-centrally specified bootstrapping environment variables.  Most other
-variable can be determined via modular configuration files.
+3. Standardized, customizable, machine generated .profile, .login, and
+crontab wrappers.
 
 Available at http://www.perl.com/CPAN/authors/id/JPRIT/ !
-
-
-##################
-# RECENT CHAN@ES #
-##################
-
-
-** 1998-09-13 RELEASE 2.21
-
-- Documentation updates.
-
-- Improved configuration and installation.
-
-
-** 1998-09-12 RELEASE 2.20
-
-- Simplified configuration even more.  Once you install envy once, it
-will remember the installation settings across subsequent upgrades.
-
-
-** 1998-09-11 RELEASE 2.19
-
-- Fixed configuration problem with re-installing.  Added tests.
-
-- 'envied' shows loaded envies in a tree layout!  Actual output:
-
- ------------------+-------------------------------------------------------
-  DIMENSION        |  ENVY
- ------------------+-------------------------------------------------------
-  First            |  qsg
-                   |      openwin
-                   |      printing
-  p4               |      qsg-p4
-  3boink           |  3boink-prod
-  objstore         |      objstore
-  objstore-release |          objstore-5.1
-                   |      qsg-build10
-                   |      sunpro
-                   |          SUNWspro-4.2
-                   |              cc-tools
- ------------------+-------------------------------------------------------
-
-
-** 1998-09-03 RELEASE 2.18
-
-- Tweaked handling of 'First' dimension.
-
 
 ----------------------------------------------------------------------
 
@@ -86,61 +38,52 @@ Here's what it looks like:
    gems-intl-rpts                     x reuters
    gems-prod                            solaris
    imag-2519                            sunpro
-   imag-batch-hilarydb                x sybase
-   imag-batch-proddb                    tcltk
-   imag-batch-testdb                    tcltk-7.6
-   imag-dbo-hilarydb                    tcltk-8.0
-   imag-dbo-proddb                   
-
-The 'x' means 'loaded'.
-
-[joshua@grdevl137] ~% envy list
-All envys currently available (2.15):
- 
- x SUNWspro-4.2         /nw/dist/prod/etc/envy/SUNWspro-4.2.env
-   TLW                  /nw/dist/prod/etc/envy/TLW.env
-   adp-batch-proddb     /nw/dist/prod/etc/envy/adp-batch-proddb.env
-   bat-2.20             /nw/dist/prod/etc/envy/bat-2.20.env
-   bookmark1            /home/joshua/.envy/bookmark1.env
- x cc-tools             /nw/dist/prod/etc/envy/cc-tools.env
-   coppelia             /nw/dist/prod/etc/envy/coppelia.env
-   dailydb              /nw/dist/prod/etc/envy/dailydb.env
-   dailydb-dev          /nw/dist/prod/etc/envy/dailydb-dev.env
-   dev                  /nw/dist/prod/etc/envy/dev.env
-   edcrs-1.0            /nw/dist/prod/etc/envy/edcrs-1.0.env
-   edcrs-prod           /nw/dist/prod/etc/envy/edcrs-prod.env
-   ess-primal-etsdb     /nw/dist/prod/etc/envy/ess-primal-etsdb.env
-   fame                 /nw/dist/prod/etc/envy/fame.env
-   finance_tech         /nw/dist/prod/etc/envy/finance_tech.env
-   fix                  /nw/dist/prod/etc/envy/fix.env
-   fvwm95-2.0.43a       /nw/dist/prod/etc/envy/fvwm95-2.0.43a.env
    ...
 
-[joshua@grdevl137] ~% cat /nw/dev/usr/etc/envy/openwin.env
-# X11 and Motif
-#
-PATH+=/usr/dt/bin:/usr/openwin/bin
-MANPATH+=/usr/dt/man:/usr/openwin/man
-LD_LIBRARY_PATH+=/usr/dt/lib:/usr/openwin/lib
-OPENWINHOME=/usr/openwin
+'x' indicates that the environement file is loaded in the current
+shell.  Also, you can look at dependencies like this:
 
-This means that when 'openwin' is loaded, two components are prepended
-to the PATH, MANPATH, and LD_LIBRARY_PATH; and OPENWINHOME is set to
-/usr/openwin.  What makes envy unique is that YOU CAN ALSO UNLOAD
-'openwin' to unprepend and unset each of the variables modified during
-the load.
+ ------------------+-------------------------------------------------------
+  DIMENSION        |  ENVY
+ ------------------+-------------------------------------------------------
+  First            |  qsg
+                   |      openwin
+                   |      printing
+  p4               |      qsg-p4
+  3boink           |  3boink-prod
+  objstore         |      objstore
+  objstore-release |          objstore-5.1
+                   |      qsg-build10
+                   |      sunpro
+                   |          SUNWspro-4.2
+                   |              cc-tools
+ ------------------+-------------------------------------------------------
 
-----------------------------------------------------------------------
 
-Credits:
-  Sergei Poliakoff - Global Technology Architect
-  Alexander Shugayev - Creative Touche
-  Devine Kerr - Developer
-  Ken Nawyn - Senior System Administrator
-  Joshua Pritikin - Magician
+** 1998-09-26 RELEASE 2.22
 
-Contact:
-  joshua.pritikin@db.com
+- Set $LOGNAME in wrapper if not already set.
+
+- Announce new mailing list: envy@listbox.com!
+
+
+** 1998-09-13 RELEASE 2.21
+
+- Documentation updates.
+
+- Improved configuration and installation.
+
+
+see ./INSTALL for hints on installation
+see ./UPGRADE if you are starting from a prior releases
+see ./TODO for a list of stuff in the tuit queue
+see ./CHANGES for a visionary perspective
+
+
+Send any questions or comments to envy@listbox.com.
+
+If you'd like to subscribe to this mailing list, send email to
+majordomo@listbox.com.  Thanks!
 
 -------------------------------------------------------------------
 Copyright © 1997-1998 Joshua Nathaniel Pritikin.  All rights reserved.

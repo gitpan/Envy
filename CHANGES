@@ -1,3 +1,22 @@
+** 1998-09-12 RELEASE 2.20
+
+- Simplified configuration even more.  Once you install envy once, it
+will remember the installation settings across subsequent upgrades.
+
+
+** 1998-09-11 RELEASE 2.19
+
+- Fixed configuration problem with re-installing.  Added tests.
+
+- 'envied' shows loaded envies in a tree layout!
+
+
+
+** 1998-09-03 RELEASE 2.18
+
+- Tweaked handling of 'First' dimension.
+
+
 ** 1998-09-01 RELEASE 2.17
 
 - Append and assignment were ambiguous and assignment took precedence.

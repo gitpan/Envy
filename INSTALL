@@ -141,6 +141,10 @@ library in addition to a command-line tool.  One possible project is a
 graphical front end to help navigate the environment.  Also see the
 TODO file.
 
+=head1 SUPPORT
+
+Send email to envy@listbox.com.
+
 =head1 SEE ALSO
 
 For a comparison of unix shells:

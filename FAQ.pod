@@ -91,6 +91,10 @@ echo
 
 .mo is the old extension.  Otherwise they are identical.
 
+=head1 SUPPORT
+
+Send email to envy@listbox.com.
+
 =head1 THANKS
 
 A big thanks to Tony.Parent@symbios.com and Jerry.Hoffman@symbios.com

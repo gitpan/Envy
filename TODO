@@ -1,11 +1,17 @@
 ** TODO
 
-pipe long output through $ENV{PAGER}
-  can't mess with envy.pl because shell is eval STDOUT!
+switch to MAKEMAKEROPT
+
+include package   # always reload; no dimensions
+
+factor fuzzy match
 
 Maybe it is possible to read the $ENVY_PATH one component at a time?
 Seems yes..?  Potentially big performance win.
-  factor fuzzy match
+
+short cuts:
+  unload by dimension!
+  unenvy : envy unload
 
 description / summary
 
@@ -16,9 +22,8 @@ generate all shell scripts with perl templates
   less chance of bugs
   make compatible with rc/es!
 
-short cuts:
-  unload by dimension!
-  unenvy : envy unload
+pipe long output through $ENV{PAGER}
+  can't fix envy.pl because shell will eval STDOUT!
 
 regression tests
   dimension swapping
@@ -49,6 +54,7 @@ umask 0;  # Figure out how to run setuid 'envy'?
 show loaded dimensions in PROMPT?
 
 documentation for:
+  First - the most important thing is to be free - agree on it!  :-)
   Envy::DB API
 
 ---------------------------------------- GRAPHICAL ENVY PROJECT ---------
